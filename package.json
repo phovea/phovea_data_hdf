@@ -1,0 +1,29 @@
+{
+  "name": "caleydo_data_hdf",
+  "version": "0.0.1",
+  "peerDependencies": {
+    "caleydo_server": "*"
+  },
+  "caleydo": {
+    "plugins": {
+      "python": [
+        {
+          "type": "dataset-provider",
+          "id": "dataset-hdf",
+          "file": "hdf"
+        },
+        {
+          "type": "json-encoder",
+          "id": "dataset-hdf",
+          "file": "json_encoder"
+        }
+      ]
+    },
+    "dependencies": {
+      "python": {
+        "numpy": ">=1.8.2",
+        "tables": ">=3.2.0"
+      }
+    }
+  }
+}
