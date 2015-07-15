@@ -389,9 +389,9 @@ class HDFProject(object):
 class HDFFilesProvider(object):
   def __init__(self):
     import caleydo_server.config
-    c = caleydo_server.config.view('hdf-dataset')
+    c = caleydo_server.config.view('caleydo_data_hdf')
     from caleydo_server.util import glob_recursivly
-    baseDir = caleydo_server.config.get('dataDir','caleydo')
+    baseDir = caleydo_server.config.get('dataDir','caleydo_server')
     self.files = [HDFProject(f, baseDir) for f in glob_recursivly(baseDir,c.glob)]
 
   def __len__(self):
