@@ -28,5 +28,8 @@
   		  "libhdf5-serial-dev": ""
       }
     }
+  },
+  "publishConfig": {
+    "registry": "http://dev.caleydo.org/nexus/content/repositories/caleydo-web/"
   }
 }
