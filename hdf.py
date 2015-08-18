@@ -16,7 +16,7 @@ def assign_ids(ids, idtype):
 
 class HDFEntry(ADataSetEntry):
   def __init__(self, group, project):
-    super(HDFEntry, self).__init__(self._group._v_title, project, self._group._v_attrs.type)
+    super(HDFEntry, self).__init__(group._v_title, project, group._v_attrs.type)
     self._group = group
     self.path = self._group._v_pathname
 
