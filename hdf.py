@@ -6,6 +6,7 @@ import caleydo_server.range as ranges
 
 import itertools
 
+from caleydo_server.dataset_def import ADataSetEntry, ADataSetProvider
 
 def assign_ids(ids, idtype):
   import caleydo_server.plugin
@@ -13,28 +14,11 @@ def assign_ids(ids, idtype):
   manager = caleydo_server.plugin.lookup('idmanager')
   return np.array(manager(ids, idtype))
 
-class HDFEntry(object):
+class HDFEntry(ADataSetEntry):
   def __init__(self, group, project):
+    super(HDFEntry, self).__init__(self._group._v_title, project, self._group._v_attrs.type)
     self._group = group
-    self._project = project
     self.path = self._group._v_pathname
-    self.type = self._group._v_attrs.type
-    self.name = self._group._v_title
-
-  def idtypes(self):
-    return []
-
-  def to_description(self):
-    return dict(type=self.type,
-                name=self.name,
-                fqname=self._project+'/'+self.name)
-
-  def to_idtype_descriptions(self):
-    def to_desc(t):
-      return dict(id=t, name=t, names=t + 's')
-
-    return map(to_desc, self.idtypes())
-
 
 class HDFMatrix(HDFEntry):
   def __init__(self, group, project):
@@ -385,8 +369,14 @@ class HDFProject(object):
   def __len__(self):
     return len(self.entries)
 
+  def __getitem__(self, dataset_id):
+    for f in self.entries:
+      if f.id == dataset_id:
+        return f
+    return None
 
-class HDFFilesProvider(object):
+
+class HDFFilesProvider(ADataSetProvider):
   def __init__(self):
     import caleydo_server.config
     c = caleydo_server.config.view('caleydo_data_hdf')
@@ -400,16 +390,18 @@ class HDFFilesProvider(object):
   def __iter__(self):
     return itertools.chain(*self.files)
 
+  def __getitem__(self, dataset_id):
+    for f in self.files:
+      r = f[dataset_id]
+      if r is not None:
+        return r
+    return None
+
 
 if __name__ == '__main__':
   # app.debug1 = True
 
   c = HDFFilesProvider()
-  l = c.list()
-  print l
-  print c.idtypes()
-  for li in l:
-    c.get(li)
 
 
 def create():
