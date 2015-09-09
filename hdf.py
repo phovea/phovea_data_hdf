@@ -312,7 +312,7 @@ class HDFTable(HDFEntry):
 
   def rowids(self, range=None):
     if self._rowids is None:
-      self._rowids = assign_ids(self.rows(), self.rowtype)
+      self._rowids = assign_ids(self.rows(), self.idtype)
     n = self._rowids
     if range is None:
       return n
