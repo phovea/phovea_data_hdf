@@ -18,6 +18,7 @@ class HDFEntry(ADataSetEntry):
   def __init__(self, group, project):
     super(HDFEntry, self).__init__(group._v_title, project, group._v_attrs.type)
     self._group = group
+    self._project = project
     self.path = self._group._v_pathname
 
 class HDFMatrix(HDFEntry):
@@ -45,6 +46,7 @@ class HDFMatrix(HDFEntry):
       return self._group._v_attrs['range']
     if self._range is not None:
       return self._range
+    print self.fqname
     d = self._group.data
     self._range = [np.nanmin(d), np.nanmax(d)]
     return self._range
@@ -209,6 +211,8 @@ class HDFStratification(HDFEntry):
   def to_description(self):
     r = super(HDFStratification, self).to_description()
     r['idtype'] = self.idtype
+    if 'origin' in self._group._v_attrs:
+      r['origin'] = self._project + '/' + self._group._v_attrs.origin
     r['groups'] = {name: dict(title=gf._v_title, size=len(gf)) for name, gf in self._group._v_children.iteritems()}
     r['ngroups'] = len(r['groups'])
     r['size'] = [sum((g['size'] for g in r['groups'].itervalues()))]
