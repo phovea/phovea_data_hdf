@@ -62,15 +62,35 @@ class HDFMatrix(HDFEntry):
     r = super(HDFMatrix, self).to_description()
     r['rowtype'] = self.rowtype
     r['coltype'] = self.coltype
-    r['value'] = dict(type=self.value,range=self.range)
+    r['value'] = v = dict(type=self.value)
+    if self.value == 'real' or self.value == 'int':
+      v['range'] = self.range
+    if self.value == 'int' and hasattr(self._group._v_attrs,'missing'):
+      v['missing'] = self._group._v_attrs.missing
+    elif self.value == 'categorical':
+      cats = self._group._v_attrs.categories
+      if 'names' in self._group._v_attrs:
+        v['categories'] = [ dict(name=cat,label=name,color=col) for cat,name,col in itertools.izip(cats,self._group._v_attrs.names,self._group._v_attrs.colors) ]
+      else:
+        v['categories'] = cats
+
+    if 'center' in self._group._v_attrs:
+      v['center'] = self._group._v_attrs['center']
     r['size'] = self.shape
     return r
+
+  def mask(self, arr):
+    if self.value == 'int' and hasattr(self._group._v_attrs,'missing'):
+      missing = self._group._v_attrs.missing
+      import numpy.ma as ma
+      return ma.masked_equal(missing, arr)
+    return arr
 
   def asnumpy(self, range=None):
     n = self._group.data
     if range is None:
-      return n
-    return n[range[0].asslice(), range[1].asslice()]
+      return self.mask(n)
+    return self.mask(n[range[0].asslice(), range[1].asslice()])
 
   def rows(self, range=None):
     n = self._group.rows
@@ -152,14 +172,25 @@ class HDFVector(HDFEntry):
     r = super(HDFVector, self).to_description()
     r['idtype'] = self.idtype
     r['value'] = dict(type=self.value,range=self.range)
+    if self.value == 'int' and hasattr(self._group._v_attrs,'missing'):
+      r['value']['mssing'] = self._group._v_attrs.missing
+    if 'center' in self._group._v_attrs:
+      r['value']['center'] = self._group._v_attrs['center']
     r['size'] = [self.shape]
     return r
+
+  def mask(self, arr):
+    if self.value == 'int' and hasattr(self._group._v_attrs,'missing'):
+      missing = self._group._v_attrs.missing
+      import numpy.ma as ma
+      return ma.masked_equal(missing, arr)
+    return arr
 
   def asnumpy(self, range=None):
     n = self._group.data
     if range is None:
-      return n
-    return n[range[0].asslice()]
+      return self.mask(n)
+    return self.mask(n[range[0].asslice()])
 
   def rows(self, range=None):
     n = self._group.rows
@@ -185,16 +216,25 @@ class HDFVector(HDFEntry):
 
 
 class HDFGroup(object):
-  def __init__(self, name, range):
+  def __init__(self, name, range, color):
     self.name = name
     self.range = range
+    self.color = color
 
   def __len__(self):
     return len(self.range)
 
   def dump(self):
-    return dict(name=self.name, range=str(self.range))
+    return dict(name=self.name, range=str(self.range), color=self.color)
 
+def guess_color(name, i):
+  name = name.lower()
+  colors = dict(male='blue',female='red',deceased='#e41a1b',living='#377eb8')
+  if name in colors:
+    return colors[name]
+  l = ['#8dd3c7', '#ffffb3', '#bebada', '#fb8072', '#80b1d3', '#fdb462', '#b3de69', '#fccde5', '#d9d9d9', '#bc80bd',
+          '#ccebc5', '#ffed6f']
+  return l[i%len(l)]
 
 class HDFStratification(HDFEntry):
   def __init__(self, group, project):
@@ -213,9 +253,10 @@ class HDFStratification(HDFEntry):
     r['idtype'] = self.idtype
     if 'origin' in self._group._v_attrs:
       r['origin'] = self._project + '/' + self._group._v_attrs.origin
-    r['groups'] = {name: dict(title=gf._v_title, size=len(gf)) for name, gf in self._group._v_children.iteritems()}
+    r['groups'] = [dict(name=gf._v_title, size=len(gf),color=gf._v_attrs['color'] if 'color' in gf._v_attrs else guess_color(gf._v_title, j))
+                   for j,gf in enumerate(self._group._v_children.itervalues())]
     r['ngroups'] = len(r['groups'])
-    r['size'] = [sum((g['size'] for g in r['groups'].itervalues()))]
+    r['size'] = [sum((g['size'] for g in r['groups']))]
     return r
 
   def _rows(self):
@@ -237,10 +278,11 @@ class HDFStratification(HDFEntry):
 
   def groups(self):
     i = 0
-    for g in self._group._v_children.itervalues():
+    for j,g in enumerate(self._group._v_children.itervalues()):
       name = g._v_title
+      color = g._v_attrs['color'] if 'color' in g._v_attrs else guess_color(name, j)
       l = len(g)
-      yield HDFGroup(name, ranges.slice(i, i + l))
+      yield HDFGroup(name, ranges.from_slice(i, i + l), color)
       i += l
 
   def __getitem__(self, item):
@@ -264,6 +306,7 @@ class HDFColumn(object):
       self.categories = attrs['categories']
     elif self.type == 'int' or self.type == 'real':
       self.range = attrs['range'] if 'range' in attrs else self.compute_range()
+      self.missing = attrs.get('missing',None)
 
   def compute_range(self):
     d = self._group.table.col(self.key)
@@ -272,11 +315,18 @@ class HDFColumn(object):
   def __call__(self, v):
     return self._converter(v)
 
+
+  def mask(self, arr):
+    if self.value == 'int' and self.missing is not None:
+      import numpy.ma as ma
+      return ma.masked_equal(self.missing, arr)
+    return arr
+
   def asnumpy(self, range=None):
     n = self._group.table.col(self.key)
     if range is not None:
       n = n[range[0].asslice()]
-    return n
+    return self.mask(n)
 
   def dump(self):
     value = dict(type=self.type)
@@ -284,6 +334,8 @@ class HDFColumn(object):
       value['categories'] = self.categories
     if self.type == 'int' or self.type == 'real':
       value['range'] = self.range
+    if self.type == 'int' and self.missing is not None:
+      value['missing'] = self.missing
     return dict(name=self.name, value=value)
 
 

@@ -30,6 +30,9 @@
       },
       "debian": {
   		  "libhdf5-serial-dev": ""
+      },
+      "redhat": {
+  		  "libhdf5-devel": ""
       }
     }
   },
