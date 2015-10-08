@@ -23,7 +23,7 @@ def convert_it(base):
   h5 = tables.open_file(base+'.h5','w')
 
   def clean_name(name):
-    n = name.lower().replace(' ','').replace('-','').replace('(','_').replace('.','_').replace(')','').split('/')[-1]
+    n = name.lower().replace(' ','').replace('-','').replace('$','').replace('(','_').replace('.','_').replace(')','').split('/')[-1]
     if n[0].isdigit():
       n = '_' + n
     return n
@@ -82,7 +82,8 @@ def convert_it(base):
             m = str
           elif row[2] == 'categorical':
             keys = row[3:]
-            keys.append('NA')
+            if not 'NA' in keys:
+              keys.append('NA')
             print keys
             enum_ = tables.misc.enum.Enum(keys)
             column['type'] = 'categorical'
@@ -144,7 +145,8 @@ def convert_it(base):
 
       cols = np.loadtxt(name+'_cols.csv', dtype=np.string_, delimiter=';', skiprows=1, usecols=(1,))
       load_stratification(cols,coltype, name.split('/')[-1])
-      print mtype[0],mtype
+      print mtype
+      print mtype[0]
 
       if mtype[0] == 'float32':
         print 'float32'
@@ -152,9 +154,20 @@ def convert_it(base):
         data = np.genfromtxt(f, dtype=np.float32, delimiter=';', missing_values='NaN', filling_values=np.NaN)
         data = data[...,0:data.shape[1]-1]
         h5.set_node_attr(group, 'range', [np.nanmin(data), np.nanmax(data)])
+      elif mtype[0] == 'int32':
+        print 'int32'
+        h5.set_node_attr(group, 'value', 'int')
+        missing = np.iinfo(np.int32).min
+        h5.set_node_attr(group, 'missing', missing)
+        data = np.genfromtxt(f, dtype=np.int32, delimiter=';', missing_values='NaN', filling_values=missing)
+        data = data[...,0:data.shape[1]-1]
+        h5.set_node_attr(group, 'range', [np.nanmin(data), np.nanmax(data)])
       elif mtype[0] == 'categorical':
         keys = mtype[1:]
-        keys.remove('-2147483648')
+        if '-2147483648' in keys:
+          keys.remove('-2147483648')
+        if 'UNKN@WN' in keys:
+          keys.remove('UNKN@WN')
         keys = sorted(map(int, keys))
         keys.append(-128)
         print keys
@@ -167,7 +180,7 @@ def convert_it(base):
         elif 1 in keys:
           h5.set_node_attr(group, 'colors', ['#dcdcdc', '#ff0000', '#4c4c4c'])
           h5.set_node_attr(group, 'names', ['Not Mutated', 'Mutated', 'Unknown'])
-        data = np.genfromtxt(f, dtype=np.int8, delimiter=';', missing_values='-2147483648', filling_values=-128)
+        data = np.genfromtxt(f, dtype=np.int8, delimiter=';', missing_values={'-2147483648','UNKN@WN','NA',''}, filling_values=-128)
         data = data[...,0:data.shape[1]-1]
 
       if coltype == 'TCGA_SAMPLE': #transpose
@@ -187,5 +200,6 @@ def convert_it(base):
   h5.close()
 
 
-for f in glob.glob('/vagrant/_data/TCGA_KIRC*'):
-  convert_it(f)
+for f in glob.glob('/vagrant/_data/calexport2hdf/*'):
+  if os.path.isdir(f):
+    convert_it(f)
