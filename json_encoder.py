@@ -3,7 +3,7 @@ __author__ = 'Samuel Gratzl'
 import numpy as np
 import tables
 
-class NumpyTablesEncoder(object):
+class TablesEncoder(object):
   def __contains__(self, obj):
     if isinstance(obj, tables.Array):
       return True
@@ -17,7 +17,7 @@ class NumpyTablesEncoder(object):
         return [base_encoder.default(obj[i]) for i in range(obj.shape[0])]
     return None
 
-n = NumpyTablesEncoder()
+n = TablesEncoder()
 
 def create():
   return n
