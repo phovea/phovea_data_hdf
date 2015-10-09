@@ -254,13 +254,17 @@ class HDFStratification(HDFEntry):
     if 'origin' in self._group._v_attrs:
       r['origin'] = self._project + '/' + self._group._v_attrs.origin
     r['groups'] = [dict(name=gf._v_title, size=len(gf),color=gf._v_attrs['color'] if 'color' in gf._v_attrs else guess_color(gf._v_title, j))
-                   for j,gf in enumerate(self._group._v_children.itervalues())]
+                   for j,gf in enumerate(self._sortedgroup())]
+
     r['ngroups'] = len(r['groups'])
     r['size'] = [sum((g['size'] for g in r['groups']))]
     return r
 
+  def _sortedgroup(self):
+    return sorted(self._group._v_children.itervalues(), key=lambda x: x._v_title)
+
   def _rows(self):
-    return np.concatenate(self._group._v_children.values())
+    return np.concatenate(self._sortedgroup())
 
   def rows(self, range=None):
     n = self._rows()
@@ -278,7 +282,7 @@ class HDFStratification(HDFEntry):
 
   def groups(self):
     i = 0
-    for j,g in enumerate(self._group._v_children.itervalues()):
+    for j,g in enumerate(self._sortedgroup()):
       name = g._v_title
       color = g._v_attrs['color'] if 'color' in g._v_attrs else guess_color(name, j)
       l = len(g)
