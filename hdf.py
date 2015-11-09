@@ -173,7 +173,7 @@ class HDFVector(HDFEntry):
     r['idtype'] = self.idtype
     r['value'] = dict(type=self.value,range=self.range)
     if self.value == 'int' and hasattr(self._group._v_attrs,'missing'):
-      r['value']['mssing'] = self._group._v_attrs.missing
+      r['value']['missing'] = self._group._v_attrs.missing
     if 'center' in self._group._v_attrs:
       r['value']['center'] = self._group._v_attrs['center']
     r['size'] = [self.shape]
