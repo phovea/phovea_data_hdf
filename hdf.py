@@ -90,7 +90,16 @@ class HDFMatrix(HDFEntry):
     n = self._group.data
     if range is None:
       return self.mask(n)
-    return self.mask(n[range[0].asslice(), range[1].asslice()])
+    rows = range[0].asslice()
+    cols = range[1].asslice()
+    d = None
+    if isinstance(rows, list) and isinstance(cols, list):
+      #fancy indexing in two dimension doesn't work
+      d_help = n[rows,:]
+      d = d_help[:,cols]
+    else:
+      d = n[rows, cols]
+    return self.mask(d)
 
   def rows(self, range=None):
     n = self._group.rows
