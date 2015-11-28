@@ -38,7 +38,7 @@ def convert_it(base):
     def load_stratification(ids, idtype, origin):
       if not os.path.exists(name+'_'+idtype+'.json'):
         return None
-      last = None
+      last = None,None
       with open(name+'_'+idtype+'.json') as fs:
         strats = json.load(fs)
         for key,value in strats.iteritems():
@@ -47,9 +47,9 @@ def convert_it(base):
           h5.set_node_attr(s, 'type', 'stratification')
           h5.set_node_attr(s, 'idtype', idtype)
           h5.set_node_attr(s, 'origin', origin)
-          last = []
+          last = [],key
           for gg,indices in value.iteritems():
-            last.extend(indices)
+            last[0].extend(indices)
             h5.create_array(s, clean_name(gg), ids[indices], gg)
       return last
 
@@ -60,7 +60,7 @@ def convert_it(base):
       h5.set_node_attr(group, 'rowtype', rowtype)
 
     rows = np.loadtxt(name+'_rows.csv', dtype=np.string_, delimiter=';', skiprows=1, usecols=(1,))
-    default_row_strat = load_stratification(rows, rowtype, name.split('/')[-1])
+    default_row_strat, default_row_strat_name = load_stratification(rows, rowtype, name.split('/')[-1])
 
     if os.path.exists(name+'_desc.csv'): #table case
       h5.create_array(group, 'rows', rows)
@@ -148,7 +148,7 @@ def convert_it(base):
         mtype = [m.strip() for m in cc.readline().split(';')[2:]]
 
       cols = np.loadtxt(name+'_cols.csv', dtype=np.string_, delimiter=';', skiprows=1, usecols=(1,))
-      default_col_strat = load_stratification(cols,coltype, name.split('/')[-1])
+      default_col_strat, default_col_strat_name = load_stratification(cols,coltype, name.split('/')[-1])
       print mtype
       print mtype[0]
 
@@ -193,9 +193,10 @@ def convert_it(base):
         rows,cols = cols,rows
 
         default_row_strat,default_col_strat = default_col_strat,default_row_strat
+        default_row_strat_name,default_col_strat_name = default_col_strat_name,default_row_strat_name
 
       if default_col_strat and len(default_col_strat) == len(cols):
-        print 'apply stratification'
+        print 'apply column stratification ', default_col_strat_name
         cols = cols[default_col_strat]
         data = data[:,default_col_strat]
 
