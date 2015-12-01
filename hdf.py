@@ -99,6 +99,10 @@ class HDFMatrix(HDFEntry):
       d = d_help[:,cols]
     else:
       d = n[rows, cols]
+
+
+    if d.ndim == 1:
+      d = d.reshape((1,d.shape[0]))
     return self.mask(d)
 
   def rows(self, range=None):
