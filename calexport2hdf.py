@@ -152,12 +152,25 @@ def convert_it(base):
       print mtype
       print mtype[0]
 
+
       if mtype[0] == 'float32':
         print 'float32'
+
+        with open(name+'_desc.json') as fs:
+          stats = json.load(fs)
         h5.set_node_attr(group, 'value', 'real')
-        data = np.genfromtxt(f, dtype=np.float32, delimiter=';', missing_values='NaN', filling_values=np.NaN)
-        data = data[...,0:data.shape[1]-1]
-        h5.set_node_attr(group, 'range', [np.nanmin(data), np.nanmax(data)])
+        with open(name+'_raw.csv') as fs:
+          data = np.genfromtxt(fs, dtype=np.float32, delimiter='\t', missing_values='NaN', filling_values=np.NaN)
+          #data = data[...,0:data.shape[1]]
+          if stats['transposed']:
+            data = np.transpose(data)
+          #print
+        minV = stats.get('min', np.nanmin(data))
+        maxV = stats.get('max', np.nanmax(data))
+        data_raw = data
+        data = data_raw.clip(minV, maxV)
+        h5.set_node_attr(group, 'range', [minV, maxV])
+        h5.set_node_attr(group, 'center', stats.get('center', 0))
       elif mtype[0] == 'int32':
         print 'int32'
         h5.set_node_attr(group, 'value', 'int')
