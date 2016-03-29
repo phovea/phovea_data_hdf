@@ -86,6 +86,9 @@ class HDFMatrix(HDFEntry):
       return ma.masked_equal(missing, arr)
     return arr
 
+  def aslist(self, range=None):
+    return self.asnumpy(range)
+
   def asnumpy(self, range=None):
     n = self._group.data
     if range is None:
@@ -202,6 +205,9 @@ class HDFVector(HDFEntry):
       import numpy.ma as ma
       return ma.masked_equal(missing, arr)
     return arr
+
+  def aslist(self, range=None):
+    return self.asnumpy(range)
 
   def asnumpy(self, range=None):
     n = self._group.data
@@ -343,6 +349,9 @@ class HDFColumn(object):
       return ma.masked_equal(self.missing, arr)
     return arr
 
+  def aslist(self, range=None):
+    return self.asnumpy(range)
+
   def asnumpy(self, range=None):
     n = self._group.table.col(self.key)
     if range is not None:
@@ -395,11 +404,15 @@ class HDFTable(HDFEntry):
       return n
     return n[range.asslice()]
 
-  def asnumpy(self, range=None):
-    n = self._group.table
+  def aslist(self, range=None):
+    return self.aspandas(range).to_records(index=False)
+
+  def aspandas(self, range=None):
+    import pandas as pd
+    n = pd.DataFrame.from_records(self._group.table[:])
     if range is None:
       return n
-    return n[range[0].asslice()]
+    return n.iloc[range[0].asslice()]
 
   def filter(self, query):
     # perform the query on rows and cols and return a range with just the mathing one
@@ -408,7 +421,7 @@ class HDFTable(HDFEntry):
     return ranges.all()
 
   def asjson(self, range=None):
-    arr = self.asnumpy(range)
+    arr = self.aslist(range)
     rows = self.rows(None if range is None else range[0])
     rowids = self.rowids(None if range is None else range[0])
 
