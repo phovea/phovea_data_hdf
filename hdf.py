@@ -405,7 +405,7 @@ class HDFTable(HDFEntry):
     return n[range.asslice()]
 
   def aslist(self, range=None):
-    return self.aspandas(range).to_records(index=False)
+    return self.aspandas(range).to_dict('records')
 
   def aspandas(self, range=None):
     import pandas as pd
