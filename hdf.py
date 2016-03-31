@@ -350,7 +350,7 @@ class HDFColumn(object):
     return arr
 
   def aslist(self, range=None):
-    return self.asnumpy(range)
+    return self.asnumpy(range).tolist()
 
   def asnumpy(self, range=None):
     n = self._group.table.col(self.key)
@@ -425,7 +425,7 @@ class HDFTable(HDFEntry):
     rows = self.rows(None if range is None else range[0])
     rowids = self.rowids(None if range is None else range[0])
 
-    dd = [[c(row[c.key]) for c in self.columns] for row in arr]
+    dd = [ {c.key : c(row[c.key]) for c in self.columns } for row in arr]
     r = dict(data=dd, rows=rows, rowIds = rowids)
 
     return r
