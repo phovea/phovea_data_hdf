@@ -46,7 +46,6 @@ class HDFMatrix(HDFEntry):
       return self._group._v_attrs['range']
     if self._range is not None:
       return self._range
-    print self.fqname
     d = self._group.data
     self._range = [np.nanmin(d), np.nanmax(d)]
     return self._range
