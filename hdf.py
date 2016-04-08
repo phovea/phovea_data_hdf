@@ -83,7 +83,7 @@ class HDFMatrix(HDFEntry):
       missing = self._group._v_attrs.missing
       import numpy.ma as ma
       return ma.masked_equal(missing, arr)
-    return arr
+    return np.array(arr)
 
   def aslist(self, range=None):
     return self.asnumpy(range)
@@ -112,7 +112,7 @@ class HDFMatrix(HDFEntry):
     return self.mask(d)
 
   def rows(self, range=None):
-    n = self._group.rows
+    n = np.array(self._group.rows)
     if range is None:
       return n
     return n[range.asslice()]
@@ -126,7 +126,7 @@ class HDFMatrix(HDFEntry):
     return n[range.asslice()]
 
   def cols(self, range=None):
-    n = self._group.cols
+    n = np.array(self._group.cols)
     if range is None:
       return n
     return n[range.asslice()]
@@ -139,11 +139,6 @@ class HDFMatrix(HDFEntry):
       return n
     return n[range.asslice()]
 
-  def filter(self, query):
-    # perform the query on rows and cols and return a range with just the mathing one
-    # np.argwhere
-    np.arange(10)
-    return ranges.all()
 
   def asjson(self, range=None):
     arr = self.asnumpy(range)
@@ -152,7 +147,7 @@ class HDFMatrix(HDFEntry):
     rowids = self.rowids(None if range is None else range[1])
     colids = self.colids(None if range is None else range[1])
 
-    r = dict(data=arr, rows=rows, cols=cols, rowIds=rowids, colids=colids)
+    r = dict(data=arr, rows=list(rows), cols=list(cols), rowIds=rowids, colids=colids)
     return r
 
 
