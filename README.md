@@ -1,5 +1,3 @@
-Caleydo Data HDF
-=====================
+Data provider plugin for loading files stored in the [hierarchical data format (HDF)](http://www.hdfgroup.org/).
 
-a data provider for files stored in the hierarchical data format
-
+This plugin is part of the [http://caleydo.org/documentation](Caleydo Web platform).
