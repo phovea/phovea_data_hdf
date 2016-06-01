@@ -338,7 +338,7 @@ class HDFColumn(object):
 
 
   def mask(self, arr):
-    if self.value == 'int' and self.missing is not None:
+    if self.type == 'int' and self.missing is not None:
       import numpy.ma as ma
       return ma.masked_equal(self.missing, arr)
     return arr
