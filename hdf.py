@@ -82,7 +82,7 @@ class HDFMatrix(HDFEntry):
     if self.value == 'int' and hasattr(self._group._v_attrs,'missing'):
       missing = self._group._v_attrs.missing
       import numpy.ma as ma
-      return ma.masked_equal(missing, arr)
+      return ma.masked_equal(arr, missing)
     return np.array(arr)
 
   def aslist(self, range=None):
@@ -197,7 +197,7 @@ class HDFVector(HDFEntry):
     if self.value == 'int' and hasattr(self._group._v_attrs,'missing'):
       missing = self._group._v_attrs.missing
       import numpy.ma as ma
-      return ma.masked_equal(missing, arr)
+      return ma.masked_equal(arr, missing)
     return arr
 
   def aslist(self, range=None):
@@ -340,7 +340,7 @@ class HDFColumn(object):
   def mask(self, arr):
     if self.type == 'int' and self.missing is not None:
       import numpy.ma as ma
-      return ma.masked_equal(self.missing, arr)
+      return ma.masked_equal(arr, self.missing)
     return arr
 
   def aslist(self, range=None):
