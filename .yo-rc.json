@@ -1,0 +1,40 @@
+{
+  "generator-phovea": {
+    "type": "service",
+    "name": "phovea_data_hdf",
+    "author": "The Caleydo Team",
+    "githubAccount": "phovea",
+    "modules": [
+      "phovea_server"
+    ],
+    "extensions": [],
+    "sextensions": [
+      {
+        "type": "dataset-provider",
+        "id": "dataset-hdf",
+        "module": "hdf",
+        "extras": {}
+      },
+      {
+        "type": "json-encoder",
+        "id": "dataset-hdf",
+        "module": "json_encoder",
+        "extras": {}
+      }
+    ],
+    "libraries": [],
+    "unknown": {
+      "requirements": [
+        "numpy>=1.8.2",
+        "tables==3.2.1.1"
+      ],
+      "debianPackages": [
+        "libhdf5-serial-dev"
+      ],
+      "redhatPackages": [
+        "libhdf5-devel"
+      ]
+    },
+    "today": "Wed, 02 Nov 2016 18:10:29 GMT"
+  }
+}
