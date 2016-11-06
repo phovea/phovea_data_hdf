@@ -10,9 +10,11 @@ def phovea(registry):
   register extension points
   :param registry:
   """
+  # generator-phovea:begin
   registry.append('dataset-provider', 'dataset-hdf', 'phovea_data_hdf.hdf', {})
 
   registry.append('json-encoder', 'dataset-hdf', 'phovea_data_hdf.json_encoder', {})
+  # generator-phovea:end
   pass
 
 
