@@ -1,12 +1,13 @@
-__author__ = 'sam'
 import os
 import numpy as np
 import tables
 import phovea_server.range as ranges
-
 import itertools
-
 from phovea_server.dataset_def import ADataSetEntry, ADataSetProvider
+
+
+__author__ = 'sam'
+
 
 def assign_ids(ids, idtype):
   import phovea_server.plugin
@@ -14,12 +15,14 @@ def assign_ids(ids, idtype):
   manager = phovea_server.plugin.lookup('idmanager')
   return np.array(manager(ids, idtype))
 
+
 class HDFEntry(ADataSetEntry):
   def __init__(self, group, project):
     super(HDFEntry, self).__init__(group._v_title, project, group._v_attrs.type)
     self._group = group
     self._project = project
     self.path = self._group._v_pathname
+
 
 class HDFMatrix(HDFEntry):
   def __init__(self, group, project):
@@ -64,12 +67,13 @@ class HDFMatrix(HDFEntry):
     r['value'] = v = dict(type=self.value)
     if self.value == 'real' or self.value == 'int':
       v['range'] = self.range
-    if self.value == 'int' and hasattr(self._group._v_attrs,'missing'):
+    if self.value == 'int' and hasattr(self._group._v_attrs, 'missing'):
       v['missing'] = self._group._v_attrs.missing
     elif self.value == 'categorical':
       cats = self._group._v_attrs.categories
       if 'names' in self._group._v_attrs:
-        v['categories'] = [ dict(name=cat,label=name,color=col) for cat,name,col in itertools.izip(cats,self._group._v_attrs.names,self._group._v_attrs.colors) ]
+        v['categories'] = [dict(name=cat, label=name, color=col) for cat, name, col in
+                           itertools.izip(cats, self._group._v_attrs.names, self._group._v_attrs.colors)]
       else:
         v['categories'] = cats
 
@@ -79,7 +83,7 @@ class HDFMatrix(HDFEntry):
     return r
 
   def mask(self, arr):
-    if self.value == 'int' and hasattr(self._group._v_attrs,'missing'):
+    if self.value == 'int' and hasattr(self._group._v_attrs, 'missing'):
       missing = self._group._v_attrs.missing
       import numpy.ma as ma
       return ma.masked_equal(arr, missing)
@@ -96,19 +100,18 @@ class HDFMatrix(HDFEntry):
     cols = range[1].asslice()
     d = None
     if isinstance(rows, list) and isinstance(cols, list):
-      #fancy indexing in two dimension doesn't work
-      d_help = n[rows,:]
-      d = d_help[:,cols]
+      # fancy indexing in two dimension doesn't work
+      d_help = n[rows, :]
+      d = d_help[:, cols]
     else:
       d = n[rows, cols]
 
-
     if d.ndim == 1:
-      #two options one row and n columns or the other way around
+      # two options one row and n columns or the other way around
       if rows is Ellipsis or (isinstance(rows, list) and len(rows) > 1):
-        d = d.reshape((d.shape[0],1))
+        d = d.reshape((d.shape[0], 1))
       else:
-        d = d.reshape((1,d.shape[0]))
+        d = d.reshape((1, d.shape[0]))
     return self.mask(d)
 
   def rows(self, range=None):
@@ -138,7 +141,6 @@ class HDFMatrix(HDFEntry):
     if range is None:
       return n
     return n[range.asslice()]
-
 
   def asjson(self, range=None):
     arr = self.asnumpy(range)
@@ -185,8 +187,8 @@ class HDFVector(HDFEntry):
   def to_description(self):
     r = super(HDFVector, self).to_description()
     r['idtype'] = self.idtype
-    r['value'] = dict(type=self.value,range=self.range)
-    if self.value == 'int' and hasattr(self._group._v_attrs,'missing'):
+    r['value'] = dict(type=self.value, range=self.range)
+    if self.value == 'int' and hasattr(self._group._v_attrs, 'missing'):
       r['value']['missing'] = self._group._v_attrs.missing
     if 'center' in self._group._v_attrs:
       r['value']['center'] = self._group._v_attrs['center']
@@ -194,7 +196,7 @@ class HDFVector(HDFEntry):
     return r
 
   def mask(self, arr):
-    if self.value == 'int' and hasattr(self._group._v_attrs,'missing'):
+    if self.value == 'int' and hasattr(self._group._v_attrs, 'missing'):
       missing = self._group._v_attrs.missing
       import numpy.ma as ma
       return ma.masked_equal(arr, missing)
@@ -244,14 +246,16 @@ class HDFGroup(object):
   def dump(self):
     return dict(name=self.name, range=str(self.range), color=self.color)
 
+
 def guess_color(name, i):
   name = name.lower()
-  colors = dict(male='blue',female='red',deceased='#e41a1b',living='#377eb8')
+  colors = dict(male='blue', female='red', deceased='#e41a1b', living='#377eb8')
   if name in colors:
     return colors[name]
   l = ['#8dd3c7', '#ffffb3', '#bebada', '#fb8072', '#80b1d3', '#fdb462', '#b3de69', '#fccde5', '#d9d9d9', '#bc80bd',
-          '#ccebc5', '#ffed6f']
-  return l[i%len(l)]
+       '#ccebc5', '#ffed6f']
+  return l[i % len(l)]
+
 
 class HDFStratification(HDFEntry):
   def __init__(self, group, project):
@@ -270,8 +274,9 @@ class HDFStratification(HDFEntry):
     r['idtype'] = self.idtype
     if 'origin' in self._group._v_attrs:
       r['origin'] = self._project + '/' + self._group._v_attrs.origin
-    r['groups'] = [dict(name=gf._v_title, size=len(gf),color=gf._v_attrs['color'] if 'color' in gf._v_attrs else guess_color(gf._v_title, j))
-                   for j,gf in enumerate(self._sortedgroup())]
+    r['groups'] = [dict(name=gf._v_title, size=len(gf),
+                        color=gf._v_attrs['color'] if 'color' in gf._v_attrs else guess_color(gf._v_title, j))
+                   for j, gf in enumerate(self._sortedgroup())]
 
     r['ngroups'] = len(r['groups'])
     r['size'] = [sum((g['size'] for g in r['groups']))]
@@ -299,7 +304,7 @@ class HDFStratification(HDFEntry):
 
   def groups(self):
     i = 0
-    for j,g in enumerate(self._sortedgroup()):
+    for j, g in enumerate(self._sortedgroup()):
       name = g._v_title
       color = g._v_attrs['color'] if 'color' in g._v_attrs else guess_color(name, j)
       l = len(g)
@@ -310,7 +315,7 @@ class HDFStratification(HDFEntry):
     group = getattr(self._group, item)
     return group
 
-  def asjson(self, range = None):
+  def asjson(self, range=None):
     r = dict(rows=self.rows(range), rowIds=self.rowids(range), groups=[g.dump() for g in self.groups()])
     return r
 
@@ -327,7 +332,7 @@ class HDFColumn(object):
       self.categories = attrs['categories']
     elif self.type == 'int' or self.type == 'real':
       self.range = attrs['range'] if 'range' in attrs else self.compute_range()
-      self.missing = attrs.get('missing',None)
+      self.missing = attrs.get('missing', None)
 
   def compute_range(self):
     d = self._group.table.col(self.key)
@@ -335,7 +340,6 @@ class HDFColumn(object):
 
   def __call__(self, v):
     return self._converter(v)
-
 
   def mask(self, arr):
     if self.type == 'int' and self.missing is not None:
@@ -419,18 +423,18 @@ class HDFTable(HDFEntry):
     rows = self.rows(None if range is None else range[0])
     rowids = self.rowids(None if range is None else range[0])
 
-    dd = [ {c.key : c(row[c.key]) for c in self.columns } for row in arr]
-    r = dict(data=dd, rows=rows, rowIds = rowids)
+    dd = [{c.key: c(row[c.key]) for c in self.columns} for row in arr]
+    r = dict(data=dd, rows=rows, rowIds=rowids)
 
     return r
 
 
 class HDFProject(object):
-  def __init__(self, filename, baseDir):
+  def __init__(self, filename, base_dir):
     self.filename = filename
-    p = os.path.relpath(filename, baseDir)
-    project,_ = os.path.splitext(p)
-    project = project.replace('.','_')
+    p = os.path.relpath(filename, base_dir)
+    project, _ = os.path.splitext(p)
+    project = project.replace('.', '_')
     self._h = tables.open_file(filename, 'r')
 
     self.entries = []
@@ -465,8 +469,8 @@ class HDFFilesProvider(ADataSetProvider):
     import phovea_server.config
     c = phovea_server.config.view('phovea_data_hdf')
     from phovea_server.util import glob_recursivly
-    baseDir = phovea_server.config.get('dataDir','phovea_server')
-    self.files = [HDFProject(f, baseDir) for f in glob_recursivly(baseDir,c.glob)]
+    base_dir = phovea_server.config.get('dataDir', 'phovea_server')
+    self.files = [HDFProject(f, base_dir) for f in glob_recursivly(base_dir, c.glob)]
 
   def __len__(self):
     return sum((len(f) for f in self.files))
