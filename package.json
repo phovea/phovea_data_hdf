@@ -1,45 +1,38 @@
 {
-  "name": "caleydo_data_hdf",
+  "scripts": {
+    "start": "python __main__.py",
+    "check": "flake8",
+    "pretest": "npm run check",
+    "test": "python setup.py test",
+    "predist": "npm run test",
+    "dist": "python setup.py bdist_egg"
+  },
+  "files": [
+    "phovea_data_hdf",
+    "__init__.py",
+    "__main__.py",
+    "build",
+    "requirements.txt",
+    "requirements_dev.txt",
+    "debian_packages.txt",
+    "redhat_packages.txt",
+    "assets"
+  ],
+  "name": "phovea_data_hdf",
   "description": "Data provider plugin for loading data stored in the hierarchical data format (HDF).",
+  "homepage": "https://phovea.caleydo.org",
   "version": "0.0.1",
-  "license" : "SEE LICENSE IN LICENSE",
-  "repository": "Caleydo/caleydo_data_hdf",
-  "dependencies": {
+  "author": {
+    "name": "The Caleydo Team",
+    "email": "contact@caleydo.org",
+    "url": "https://caleydo.org"
   },
-  "peerDependencies": {
-    "caleydo_server": "*"
+  "license": "BSD-3-Clause",
+  "bugs": {
+    "url": "https://github.com/phovea/phovea_data_hdf/issues"
   },
-  "caleydo": {
-    "type": "plugin",
-    "category": "python_data",
-    "plugins": {
-      "python": [
-        {
-          "type": "dataset-provider",
-          "id": "dataset-hdf",
-          "file": "hdf"
-        },
-        {
-          "type": "json-encoder",
-          "id": "dataset-hdf",
-          "file": "json_encoder"
-        }
-      ]
-    },
-    "dependencies": {
-      "python": {
-        "numpy": ">=1.8.2",
-        "tables": "==3.2.1.1"
-      },
-      "debian": {
-  		  "libhdf5-serial-dev": ""
-      },
-      "redhat": {
-  		  "libhdf5-devel": ""
-      }
-    }
-  },
-  "publishConfig": {
-    "registry": "http://registry.caleydo.org/"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/phovea/phovea_data_hdf.git"
   }
 }

@@ -2,16 +2,16 @@ __author__ = 'sam'
 import os
 import numpy as np
 import tables
-import caleydo_server.range as ranges
+import phovea_server.range as ranges
 
 import itertools
 
-from caleydo_server.dataset_def import ADataSetEntry, ADataSetProvider
+from phovea_server.dataset_def import ADataSetEntry, ADataSetProvider
 
 def assign_ids(ids, idtype):
-  import caleydo_server.plugin
+  import phovea_server.plugin
 
-  manager = caleydo_server.plugin.lookup('idmanager')
+  manager = phovea_server.plugin.lookup('idmanager')
   return np.array(manager(ids, idtype))
 
 class HDFEntry(ADataSetEntry):
@@ -462,10 +462,10 @@ class HDFProject(object):
 
 class HDFFilesProvider(ADataSetProvider):
   def __init__(self):
-    import caleydo_server.config
-    c = caleydo_server.config.view('caleydo_data_hdf')
-    from caleydo_server.util import glob_recursivly
-    baseDir = caleydo_server.config.get('dataDir','caleydo_server')
+    import phovea_server.config
+    c = phovea_server.config.view('phovea_data_hdf')
+    from phovea_server.util import glob_recursivly
+    baseDir = phovea_server.config.get('dataDir','phovea_server')
     self.files = [HDFProject(f, baseDir) for f in glob_recursivly(baseDir,c.glob)]
 
   def __len__(self):
