@@ -1,6 +1,5 @@
 {
   "scripts": {
-    "start": "python __main__.py",
     "check": "flake8",
     "pretest": "npm run check",
     "test": "python setup.py test",
