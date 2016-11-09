@@ -1,6 +1,6 @@
 {
   "generator-phovea": {
-    "type": "service",
+    "type": "slib",
     "name": "phovea_data_hdf",
     "author": "The Caleydo Team",
     "githubAccount": "phovea",
