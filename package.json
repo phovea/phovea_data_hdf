@@ -1,11 +1,4 @@
 {
-  "scripts": {
-    "check": "flake8",
-    "pretest": "npm run check",
-    "test": "python setup.py test",
-    "predist": "npm run test",
-    "dist": "python setup.py bdist_egg"
-  },
   "files": [
     "phovea_data_hdf",
     "__init__.py",
@@ -13,10 +6,17 @@
     "build",
     "requirements.txt",
     "requirements_dev.txt",
-    "debian_packages.txt",
-    "redhat_packages.txt",
-    "assets"
+    "docker_packages.txt"
   ],
+  "scripts": {
+    "check": "flake8",
+    "pretest": "npm run check",
+    "test": "python setup.py test",
+    "prebuild": "node -e \"process.exit(process.env.PHOVEA_SKIP_TESTS === undefined?1:0)\" || npm run test",
+    "build": "python -c \"from distutils.dir_util import mkpath ; mkpath('./build/source')\" && (tar -c ./phovea_data_hdf --exclude '*.pyc' | tar -xC build/source)",
+    "predist": "npm run build",
+    "dist": "python setup.py bdist_egg"
+  },
   "name": "phovea_data_hdf",
   "description": "Data provider plugin for loading data stored in the hierarchical data format (HDF).",
   "homepage": "https://phovea.caleydo.org",
