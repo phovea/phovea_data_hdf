@@ -1,2 +1,2 @@
 -e git+https://github.com/phovea/phovea_server.git@develop#egg=phovea_server
-tables==3.2.1.1
+tables==3.3.0
