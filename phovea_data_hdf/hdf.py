@@ -5,7 +5,6 @@ import phovea_server.range as ranges
 import itertools
 from phovea_server.dataset_def import ADataSetEntry, ADataSetProvider
 
-
 __author__ = 'sam'
 
 
@@ -30,6 +29,14 @@ class HDFMatrix(HDFEntry):
     self._rowids = None
     self._colids = None
     self._range = None
+    if self.value == 'categorical':
+      cats = group._v_attrs.categories
+      self._converter = tables.misc.enum.Enum(cats)
+      if 'names' in group._v_attrs:
+        self.categories = [dict(name=cat, label=name, color=col) for cat, name, col in
+                           itertools.izip(cats, group._v_attrs.names, group._v_attrs.colors)]
+      else:
+        self.categories = cats
 
   @property
   def rowtype(self):
@@ -70,12 +77,7 @@ class HDFMatrix(HDFEntry):
     if self.value == 'int' and hasattr(self._group._v_attrs, 'missing'):
       v['missing'] = self._group._v_attrs.missing
     elif self.value == 'categorical':
-      cats = self._group._v_attrs.categories
-      if 'names' in self._group._v_attrs:
-        v['categories'] = [dict(name=cat, label=name, color=col) for cat, name, col in
-                           itertools.izip(cats, self._group._v_attrs.names, self._group._v_attrs.colors)]
-      else:
-        v['categories'] = cats
+      v['categories'] = self.categories
 
     if 'center' in self._group._v_attrs:
       v['center'] = self._group._v_attrs['center']
@@ -326,10 +328,16 @@ class HDFColumn(object):
     self.key = attrs['key']
     self.name = attrs['name']
     self.type = attrs['type']
-    self._converter = lambda x: x
     if self.type == 'categorical':
-      self._converter = tables.misc.enum.Enum(attrs['categories'])
-      self.categories = attrs['categories']
+      cats = attrs['categories']
+      if 'names' in attrs:
+        self.categories = [dict(name=cat, label=name, color=col) for cat, name, col in
+                           itertools.izip(cats, attrs['names'], attrs['colors'])]
+      else:
+        self.categories = cats
+      self._converter = tables.misc.enum.Enum(cats)
+      # create a numpy function out of it
+      self._converter = np.vectorize(self._converter, otypes='S' + max((len(c) for c in cats)))
     elif self.type == 'int' or self.type == 'real':
       self.range = attrs['range'] if 'range' in attrs else self.compute_range()
       self.missing = attrs.get('missing', None)
@@ -345,6 +353,9 @@ class HDFColumn(object):
     if self.type == 'int' and self.missing is not None:
       import numpy.ma as ma
       return ma.masked_equal(arr, self.missing)
+
+    if self.type == 'categorical':  # convert categorical columns
+      return self._converter(arr)
     return arr
 
   def aslist(self, range=None):
@@ -408,6 +419,12 @@ class HDFTable(HDFEntry):
   def aspandas(self, range=None):
     import pandas as pd
     n = pd.DataFrame.from_records(self._group.table[:])
+
+    # convert categorical enums
+    for c in self.columns:
+      if c.type == 'categorical':
+        n[c.key] = c(n[c.key])
+
     if range is None:
       return n
     return n.iloc[range[0].asslice()]
@@ -415,7 +432,6 @@ class HDFTable(HDFEntry):
   def filter(self, query):
     # perform the query on rows and cols and return a range with just the mathing one
     # np.argwhere
-    np.arange(10)
     return ranges.all()
 
   def asjson(self, range=None):
@@ -423,7 +439,7 @@ class HDFTable(HDFEntry):
     rows = self.rows(None if range is None else range[0])
     rowids = self.rowids(None if range is None else range[0])
 
-    dd = [{c.key: c(row[c.key]) for c in self.columns} for row in arr]
+    dd = [{c.key: row[c.key] for c in self.columns} for row in arr]
     r = dict(data=dd, rows=rows, rowIds=rowids)
 
     return r
