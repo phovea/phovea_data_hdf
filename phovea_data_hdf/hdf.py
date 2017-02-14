@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import numpy as np
 import tables
@@ -23,6 +24,27 @@ class HDFEntry(ADataSetEntry):
     self.path = self._group._v_pathname
 
 
+def _resolve_categories(attrs):
+  cats = attrs['categories']
+  if isinstance(cats[0], str) or isinstance(cats[0], unicode):  # categories are strings
+    converter = tables.misc.enum.Enum(cats)
+    # create a numpy function out of it
+    converter = np.vectorize(converter, otypes=['S' + str(max((len(c) for c in cats)))])
+  else:
+    converter = None
+  if 'names' in attrs:
+    names = attrs['names']
+    colors = attrs['colors']
+    if len(names) == len(cats) - 1:  # unknown missing
+      names.insert(0, 'UNKN@WN')
+      colors.insert(0, '#4c4c4c')
+    cats = [dict(name=cat, label=name, color=col) for cat, name, col in
+            itertools.izip(cats, names, colors)]
+
+  print(cats)
+  return cats, converter
+
+
 class HDFMatrix(HDFEntry):
   def __init__(self, group, project):
     super(HDFMatrix, self).__init__(group, project)
@@ -30,13 +52,7 @@ class HDFMatrix(HDFEntry):
     self._colids = None
     self._range = None
     if self.value == 'categorical':
-      cats = group._v_attrs.categories
-      self._converter = tables.misc.enum.Enum(cats)
-      if 'names' in group._v_attrs:
-        self.categories = [dict(name=cat, label=name, color=col) for cat, name, col in
-                           itertools.izip(cats, group._v_attrs.names, group._v_attrs.colors)]
-      else:
-        self.categories = cats
+      self.categories, self._converter = _resolve_categories(group._v_attrs)
 
   @property
   def rowtype(self):
@@ -89,6 +105,9 @@ class HDFMatrix(HDFEntry):
       missing = self._group._v_attrs.missing
       import numpy.ma as ma
       return ma.masked_equal(arr, missing)
+
+    if self.value == 'categorical' and self._converter is not None:
+      return np.array(self._converter(arr))
     return np.array(arr)
 
   def aslist(self, range=None):
@@ -329,15 +348,7 @@ class HDFColumn(object):
     self.name = attrs['name']
     self.type = attrs['type']
     if self.type == 'categorical':
-      cats = attrs['categories']
-      if 'names' in attrs:
-        self.categories = [dict(name=cat, label=name, color=col) for cat, name, col in
-                           itertools.izip(cats, attrs['names'], attrs['colors'])]
-      else:
-        self.categories = cats
-      self._converter = tables.misc.enum.Enum(cats)
-      # create a numpy function out of it
-      self._converter = np.vectorize(self._converter, otypes='S' + max((len(c) for c in cats)))
+      self.categories, self._converter = _resolve_categories(attrs)
     elif self.type == 'int' or self.type == 'real':
       self.range = attrs['range'] if 'range' in attrs else self.compute_range()
       self.missing = attrs.get('missing', None)
@@ -346,15 +357,17 @@ class HDFColumn(object):
     d = self._group.table.col(self.key)
     return [np.nanmin(d), np.nanmax(d)]
 
-  def __call__(self, v):
-    return self._converter(v)
+  def convert_category(self, vs):
+    if self._converter is not None:
+      return self._converter(vs)
+    return vs
 
   def mask(self, arr):
     if self.type == 'int' and self.missing is not None:
       import numpy.ma as ma
       return ma.masked_equal(arr, self.missing)
 
-    if self.type == 'categorical':  # convert categorical columns
+    if self.type == 'categorical' and self._converter is not None:  # convert categorical columns
       return self._converter(arr)
     return arr
 
@@ -423,7 +436,7 @@ class HDFTable(HDFEntry):
     # convert categorical enums
     for c in self.columns:
       if c.type == 'categorical':
-        n[c.key] = c(n[c.key])
+        n[c.key] = c.convert_category(n[c.key])
 
     if range is None:
       return n
