@@ -193,7 +193,7 @@ class HDFVector(AVector):
     return self.mask(n[range[0].asslice()])
 
   def rows(self, range=None):
-    n = self._group.rows
+    n = np.array(self._group.rows)
     if range is None:
       return n
     return n[range.asslice()]
@@ -335,7 +335,7 @@ class HDFColumn(AColumn):
       value['range'] = self.range
     if self.type == 'int' and self.missing is not None:
       value['missing'] = self.missing
-    return dict(name=self.name, value=value)
+    return dict(name=self.name, value=value, column=self.key)
 
 
 class HDFTable(ATable):
@@ -359,7 +359,7 @@ class HDFTable(ATable):
     return r
 
   def rows(self, range=None):
-    n = self._group.rows
+    n = np.array(self._group.rows)
     if range is None:
       return n
     return n[range.asslice()]
@@ -376,7 +376,7 @@ class HDFTable(ATable):
     import pandas as pd
     n = pd.DataFrame.from_records(self._group.table[:])
     # ensure right column order
-    n = n[[c.name for c in self.columns]]
+    n = n[[c.key for c in self.columns]]
 
     # convert categorical enums
     for c in self.columns:
