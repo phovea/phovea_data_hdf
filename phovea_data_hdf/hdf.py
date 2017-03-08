@@ -294,7 +294,7 @@ class HDFStratification(AStratification):
 
 class HDFColumn(AColumn):
   def __init__(self, attrs, group):
-    super(AColumn, self).__init__(attrs['name'], attrs['type'])
+    super(HDFColumn, self).__init__(attrs['name'], attrs['type'])
     self._group = group
     self.key = attrs['key']
     if self.type == 'categorical':
