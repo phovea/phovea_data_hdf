@@ -4,7 +4,7 @@ import numpy as np
 import tables
 import phovea_server.range as ranges
 import itertools
-from phovea_server.dataset_def import ADataSetEntry, ADataSetProvider
+from phovea_server.dataset_def import ADataSetProvider, AColumn, AMatrix, AStratification, ATable, AVector
 
 __author__ = 'sam'
 
@@ -14,14 +14,6 @@ def assign_ids(ids, idtype):
 
   manager = phovea_server.plugin.lookup('idmanager')
   return np.array(manager(ids, idtype))
-
-
-class HDFEntry(ADataSetEntry):
-  def __init__(self, group, project):
-    super(HDFEntry, self).__init__(group._v_title, project, group._v_attrs.type)
-    self._group = group
-    self._project = project
-    self.path = self._group._v_pathname
 
 
 def _resolve_categories(attrs):
@@ -45,26 +37,21 @@ def _resolve_categories(attrs):
   return cats, converter
 
 
-class HDFMatrix(HDFEntry):
+class HDFMatrix(AMatrix):
   def __init__(self, group, project):
-    super(HDFMatrix, self).__init__(group, project)
+    super(HDFMatrix, self).__init__(group._v_title, project, group._v_attrs.type)
+    self._group = group
+    self._project = project
+    self.path = self._group._v_pathname
     self._rowids = None
     self._colids = None
     self._range = None
+    self.rowtype = self._group._v_attrs.rowtype
+    self.coltype = self._group._v_attrs.coltype
+    self.value = self._group._v_attrs.value
+    self.shape = self._group.data.shape
     if self.value == 'categorical':
       self.categories, self._converter = _resolve_categories(group._v_attrs)
-
-  @property
-  def rowtype(self):
-    return self._group._v_attrs.rowtype
-
-  @property
-  def coltype(self):
-    return self._group._v_attrs.coltype
-
-  @property
-  def value(self):
-    return self._group._v_attrs.value
 
   @property
   def range(self):
@@ -75,10 +62,6 @@ class HDFMatrix(HDFEntry):
     d = self._group.data
     self._range = [np.nanmin(d), np.nanmax(d)]
     return self._range
-
-  @property
-  def shape(self):
-    return self._group.data.shape
 
   def idtypes(self):
     return [self.rowtype, self.coltype]
@@ -109,9 +92,6 @@ class HDFMatrix(HDFEntry):
     if self.value == 'categorical' and self._converter is not None:
       return np.array(self._converter(arr))
     return np.array(arr)
-
-  def aslist(self, range=None):
-    return self.asnumpy(range)
 
   def asnumpy(self, range=None):
     n = self._group.data
@@ -163,30 +143,17 @@ class HDFMatrix(HDFEntry):
       return n
     return n[range.asslice()]
 
-  def asjson(self, range=None):
-    arr = self.asnumpy(range)
-    rows = self.rows(None if range is None else range[0])
-    cols = self.cols(None if range is None else range[1])
-    rowids = self.rowids(None if range is None else range[1])
-    colids = self.colids(None if range is None else range[1])
 
-    r = dict(data=arr, rows=list(rows), cols=list(cols), rowIds=rowids, colids=colids)
-    return r
-
-
-class HDFVector(HDFEntry):
+class HDFVector(AVector):
   def __init__(self, group, project):
-    super(HDFVector, self).__init__(group, project)
+    super(HDFVector, self).__init__(group._v_title, project, group._v_attrs.type)
+    self._group = group
+    self._project = project
     self._rowids = None
     self._range = None
-
-  @property
-  def idtype(self):
-    return self._group._v_attrs.rowtype
-
-  @property
-  def value(self):
-    return self._group._v_attrs.value
+    self.idtype = self._group._v_attrs.rowtype
+    self.value = self._group._v_attrs.value
+    self.shape = len(self._group.data)
 
   @property
   def range(self):
@@ -197,10 +164,6 @@ class HDFVector(HDFEntry):
     d = self._group.data
     self._range = [np.nanmin(d), np.nanmax(d)]
     return self._range
-
-  @property
-  def shape(self):
-    return len(self._group.data)
 
   def idtypes(self):
     return [self.idtype]
@@ -223,9 +186,6 @@ class HDFVector(HDFEntry):
       return ma.masked_equal(arr, missing)
     return arr
 
-  def aslist(self, range=None):
-    return self.asnumpy(range)
-
   def asnumpy(self, range=None):
     n = self._group.data
     if range is None:
@@ -233,7 +193,7 @@ class HDFVector(HDFEntry):
     return self.mask(n[range[0].asslice()])
 
   def rows(self, range=None):
-    n = self._group.rows
+    n = np.array(self._group.rows)
     if range is None:
       return n
     return n[range.asslice()]
@@ -245,14 +205,6 @@ class HDFVector(HDFEntry):
     if range is None:
       return n
     return n[range.asslice()]
-
-  def asjson(self, range=None):
-    arr = self.asnumpy(range)
-    rows = self.rows(None if range is None else range[0])
-    rowids = self.rowids(None if range is None else range[1])
-
-    r = dict(data=arr, rows=rows, rowIds=rowids)
-    return r
 
 
 class HDFGroup(object):
@@ -278,14 +230,13 @@ def guess_color(name, i):
   return l[i % len(l)]
 
 
-class HDFStratification(HDFEntry):
+class HDFStratification(AStratification):
   def __init__(self, group, project):
-    super(HDFStratification, self).__init__(group, project)
+    super(HDFStratification, self).__init__(group._v_title, project, group._v_attrs.type)
+    self._group = group
+    self._project = project
     self._rowids = None
-
-  @property
-  def idtype(self):
-    return self._group._v_attrs.idtype
+    self.idtype = self._group._v_attrs.idtype
 
   def idtypes(self):
     return [self.idtype]
@@ -341,12 +292,11 @@ class HDFStratification(HDFEntry):
     return r
 
 
-class HDFColumn(object):
+class HDFColumn(AColumn):
   def __init__(self, attrs, group):
+    super(HDFColumn, self).__init__(attrs['name'], attrs['type'])
     self._group = group
     self.key = attrs['key']
-    self.name = attrs['name']
-    self.type = attrs['type']
     if self.type == 'categorical':
       self.categories, self._converter = _resolve_categories(attrs)
     elif self.type == 'int' or self.type == 'real':
@@ -371,9 +321,6 @@ class HDFColumn(object):
       return self._converter(arr)
     return arr
 
-  def aslist(self, range=None):
-    return self.asnumpy(range).tolist()
-
   def asnumpy(self, range=None):
     n = self._group.table.col(self.key)
     if range is not None:
@@ -388,19 +335,18 @@ class HDFColumn(object):
       value['range'] = self.range
     if self.type == 'int' and self.missing is not None:
       value['missing'] = self.missing
-    return dict(name=self.name, value=value)
+    return dict(name=self.name, value=value, column=self.key)
 
 
-class HDFTable(HDFEntry):
+class HDFTable(ATable):
   def __init__(self, group, project):
-    super(HDFTable, self).__init__(group, project)
+    super(HDFTable, self).__init__(group._v_title, project, group._v_attrs.type)
+    self._group = group
+    self._project = project
 
     self.columns = [HDFColumn(a, group) for a in group._v_attrs.columns]
     self._rowids = None
-
-  @property
-  def idtype(self):
-    return self._group._v_attrs.rowtype
+    self.idtype = self._group._v_attrs.rowtype
 
   def idtypes(self):
     return [self.idtype]
@@ -413,7 +359,7 @@ class HDFTable(HDFEntry):
     return r
 
   def rows(self, range=None):
-    n = self._group.rows
+    n = np.array(self._group.rows)
     if range is None:
       return n
     return n[range.asslice()]
@@ -426,12 +372,11 @@ class HDFTable(HDFEntry):
       return n
     return n[range.asslice()]
 
-  def aslist(self, range=None):
-    return self.aspandas(range).to_dict('records')
-
   def aspandas(self, range=None):
     import pandas as pd
     n = pd.DataFrame.from_records(self._group.table[:])
+    # ensure right column order
+    n = n[[c.key for c in self.columns]]
 
     # convert categorical enums
     for c in self.columns:
@@ -440,22 +385,12 @@ class HDFTable(HDFEntry):
 
     if range is None:
       return n
-    return n.iloc[range[0].asslice()]
+    return n.iloc[range[0].asslice(no_ellipsis=True)]
 
   def filter(self, query):
     # perform the query on rows and cols and return a range with just the mathing one
     # np.argwhere
     return ranges.all()
-
-  def asjson(self, range=None):
-    arr = self.aslist(range)
-    rows = self.rows(None if range is None else range[0])
-    rowids = self.rowids(None if range is None else range[0])
-
-    dd = [{c.key: row[c.key] for c in self.columns} for row in arr]
-    r = dict(data=dd, rows=rows, rowIds=rowids)
-
-    return r
 
 
 class HDFProject(object):
@@ -505,7 +440,7 @@ class HDFFilesProvider(ADataSetProvider):
     return sum((len(f) for f in self.files))
 
   def __iter__(self):
-    return itertools.chain(*self.files)
+    return iter((f for f in itertools.chain(*self.files) if f.can_read()))
 
   def __getitem__(self, dataset_id):
     for f in self.files:
