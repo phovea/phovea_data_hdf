@@ -1,27 +1,33 @@
 language: python
 sudo: required
 env:
-  - TOXENV=py27
-  - TOXENV=py34
-
+- TOXENV=py27
+- TOXENV=py34
 install:
-  - (!(test -f docker_packages.txt) || (cat docker_packages.txt | xargs sudo apt-get install -y))
-  - pip install -r requirements_dev.txt
-  - pip install -r requirements.txt
-
+- "(!(test -f docker_packages.txt) || (cat docker_packages.txt | xargs sudo apt-get
+  install -y))"
+- pip install -r requirements_dev.txt
+- pip install -r requirements.txt
 script: npm run dist
-
+notifications:
+  slack:
+    secure: cdSCvobc77qanUWWS5VeVLIrl7kJPid2+CaCzuwplWwM23ybnF/FgGwTUodTPcmlxFPYEkTNLlOd+QKYmBNcTYy4futdHcwxTkv18ihb/TVW91M4U98ZHnq1zstbwj2ot2WXkHZXwiypbFzA3ie22aOg/IkUyYs6hk7EFfS2ULQM1TQOQSmuuEWUkZPi/wQPLF7rZRDlYDB1kO06u51lnGZHnjgUatc2ziDlbFJB1MhhYP5c0F7jigXVh25nDJIlg+dOLmKeHEeIdT89J6Fl+GlOqEBOpC7SY4eE6vuJYMJ/xeSKzoH+fO1uobyQ8WwpQXpoGE0+eumN7ty8C4EqQqN3CYCvXorieQ84LJpz6jHtwIuVTJHgKuTXjByjJlTCAUCzXdBf1knE5GnbH4Eqcznyt7opLzcH01kIiNsEoFPycls/WCjM2DhIBW+GrbiRT7EIEuch99aDeYQ/tABDmWVNXWK/kMZ6v3VQlw0esK6Q3ehIx78wJEDkGljUompUIqz4fv/TW4CDvytCgfWPSALVsTFoGQAYg60La5FqBP2238AN61CH9NNE9X68i4nfsa/yLSma2dSkX0dR1VfRdt+cjzIKZz6fiRlteSLf5KQI1SvOnmvPKscrhVooEEKaRmniqif2aj+OcGWtas6T5HoG0xmrK+GUNX6PUb390RQ=
+    on_success: change
+    on_failure: always
 deploy:
-  provider: releases
+- provider: releases
   api_key:
-    secure: TK9/P34Bi3WuppiDrBCwVcn41yCBwmILaU8hXTBzUPbT7TbeFIwsC6/4CtH85Z+ZrUve4S5pTmWRNf2dQDxWw3uYu7+bJuemV2J1LHG76mognj+TNEiYxfLQUt3Gql4W7C7FcI4Rlx5/uMN9wY1wro8TWUBMwT6jjSrUWIvK3GXoojd5bHvJx07XpjWl9wCon4D0ruZiFoM2mdeP23lbc2GckETi32oEKswnQXxkMACmxbPzoWbvkxH4aK8Bt2Rj2sl2TbPhVkN6DAkHGkGAvLI+2/aRfG27+oo3OKsaDjbuGABct8TfZccJ970CbQ8kbnCjYxstvqkg1JWjF0W67sX/flBZZOEUA5l0OLWo6HqMGMxm7/lEQhIdPMsRmvXL+HVOxkMrB2dda58QzxVwiZp+rRqUaeabPZp8Kl5xodGrVxsBvxe6zAbJ5jCtCSumG6+kLyKI00/kYlghqQNrgUw0ZsYJlQ34h3lo/24QpaeyDpQoCkGWQgtgqiXGpeKSu7bCnOqIqAy3nbT9Utwj7K8gIasTG5idosEAz/THMampNbGDuyxxc340sYGNMg9Bhm1g2ILWRdtV470p5hwBtIDTKi3/PAizEO26+Wh0zI47Sg3ao57avcbCsTmzbZUeA5J4bojmchhJCHX8su9cSCGh/2fJA/1eBIgEvOQ8LNE=
+    secure: V3V1otnXEHN1pkpH9prHG8lZXL/fKw5jrXplERXATzeK37MjBnoDHYN7UN3CmVqV7ZMhgCrKgikiq6ra3o4LvQxf1RrlCkm28R2dKxiCGsKTfpoFo6TkUZAJES0NAUwevFV8KSXFT2lNMpDP9tPr0cQde27lasTcSqgIAi+2Vb9856Uu+XvzDx/VDxDnESdJpjAKwaemOBnB2JmndS9JFMT+xl1oSD8bDoT6CgPqfHdGBVl6xYKVj4l5Cxd8L1d4KNZ1W59UOLOPzOBwtZJh5SQQRFXEVFpBmRYdJXN5hTA1rSwUYbM43elOSMylpoJo8tcxiC88w/dOCI0ZlWU3D5iK28njLGSXXJssTiaTQdBg0bMG6BRMdKUt7OoL4g+pyJ64+QZVLNHhS5iu6LSCBex9xO47F13N5id654/8R7YB5cwOm5Z92Bjf52y76V5nT+PcxpSjtkWqVVXZOxZR1eD7nmVsG5Oh0X54LzV4LvxeK0kAL+FU4BGr5SQwSW7SXn3QX28ypGLWMveJp1LOUUYdQh4GCfLNJz/35x0nHJLwHc+FAJivR0QIctVscEQPI9vyGRZQ44Z5pbwhoXD1A43ClfxR8At1FADwO1m18+UWnrfAJ9pT4kkZq5PHN2xVFQFSjJ/5zQFM6VhXwcXn0/GWf6jbWoddH6Rm1PBBH5s=
   file_glob: true
   file: dist/phovea_data_hdf*.egg
   on:
     tags: true
-
-notifications:
-  slack:
-    secure: E8/1UIdHSczUbN+6i6gd1d5LM4vmLdwLQ30tpyjvnM0wvfDce76oPxLJAy240WJ5ybXRZUtNrttpVpt4tEXCy8aLFCmxD7s77rVloH+q1J8R/ptTFWZGhFGEujk1awEmVbzcWxJkV9/JENQaeGBKxwv8/EQwWwEkAb7p/+AJb9owmH88b3wUZUGHBWtbMiyyaF4Rm1Wg1stJB8Z1Ga7PRF4cqufTgcDdsCPVv9gAY+VxOIGqX/Vfuc9UWpUH8vq8lHUE7Inn5QS78kuFfSgLWga3H6Mu/Gko1XNlWk0QWWQBUvEZ6ZC6Wuo68KzvUjJHDTnx8WyfHue2JNHIslcX+eJq2WHLeEgM24VeNkILCGo/H/60NGHiSjrIv/Y9h6bQ9FDjo6TUyE4nbdPYN1RN9FQ5UbI9Y4Gi753H9mqnHWlEywBOzHxdZCAuz9Wh03CCF/blsvJ+Obbyo6Jrfe+g44jyi9kQdBNQ78qG6v4EXws8FiYao6x3PpgIwFix42Cpr+soAh5FpA3C1zHSAyZZpXF65/lrDl5yPNofK7Wy0B9bw+0I6Z/u7ZKFNVZXvYPGYvtUVcsALGBdmYc61+LCta36Po0KZseWVAlJj6QnOJDYzv0wvV/zsuf9A5KpYFGiqV9Q7zmtiO5FYF5sBy+lE7O9tHVO4O18IRndhRQgxhs=
-    on_success: change
-    on_failure: always
+    repo: phovea/phovea_data_hdf
+- provider: pypi
+  user: caleydo-bot
+  password:
+    secure: H0/G0A7hoZS0uNpBRHUtiTbHPo5cl9A2HxhyPf9DL+CDLvOfwwJxMXEggdh4BiafHA88Pv/kff5SGTerrKIRL/6Gy/pw5bjPbD5e3H35JXkK+r0vKufxLlPXKqZJEhgxuNEa7i/n7gxOZ/3kIUrWzyfEjp9fp2cQYg+fYAbBTsWleQwZ2ZTvj9lDfTea+0RKMA9Ua2FBOACSWdwPZq+ZQL84rSV96A7e09ABF5OOqpLITiYFFtCVBCUBYNDQXx3UhWynAoRcGFXihO9ZJ5avcSUNvFj9PiLxBR36aEtRF2mWJ6xVo4oz2FXPcUjE+ABCDco839Z2FGAhMtYVsMjtY6utUh4NcwRADEG2FkreX8V2sSvFnbT7flmLBCpjt28CWpTlagonuPkiDSCM/XTQueAnjU5oLBntWQZs4rWX80hsxp8fpzzv6WR+ip3zWeDAPpPTkA+aRJfdw4/OAo0sivLkfgURQ/3vkYm790dOOG2wMwN2Bx2A6G+JhsawmqGJs1l2YYesRLOhjInbstWeyQf5j/yYhwgI63OZVY4ja3WUD2n1ctrAyEYjX834T9m6IXx9BgsydF37AVpL9BDdZPSv2kVFszx4Q/DcQK2LIfOZZQ8SREtTIxoA2mSJ7jyRHLuNnmVc4NToaOTvYOj8TPQkhZJr++qN+lou3h4WizI=
+  on:
+    tags: true
+    distributions: sdist bdist_wheel
+    repo: phovea/phovea_data_hdf
