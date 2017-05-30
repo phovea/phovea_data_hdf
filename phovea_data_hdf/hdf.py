@@ -113,6 +113,8 @@ class HDFMatrix(AMatrix):
         d = d.reshape((d.shape[0], 1))
       else:
         d = d.reshape((1, d.shape[0]))
+    elif d.ndim == 0:
+      d = d.reshape((1,1))
     return self.mask(d)
 
   def rows(self, range=None):
@@ -190,7 +192,10 @@ class HDFVector(AVector):
     n = self._group.data
     if range is None:
       return self.mask(n)
-    return self.mask(n[range[0].asslice()])
+    d = n[range[0].asslice()]
+    if d.ndim == 0:
+      d = d.reshape((1,))
+    return self.mask(d)
 
   def rows(self, range=None):
     n = np.array(self._group.rows)
