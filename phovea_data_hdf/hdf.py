@@ -114,7 +114,7 @@ class HDFMatrix(AMatrix):
       else:
         d = d.reshape((1, d.shape[0]))
     elif d.ndim == 0:
-      d = d.reshape((1,1))
+      d = d.reshape((1, 1))
     return self.mask(d)
 
   def rows(self, range=None):
