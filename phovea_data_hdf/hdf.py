@@ -33,7 +33,6 @@ def _resolve_categories(attrs):
     cats = [dict(name=cat, label=name, color=col) for cat, name, col in
             itertools.izip(cats, names, colors)]
 
-  print(cats)
   return cats, converter
 
 
@@ -213,16 +212,20 @@ class HDFVector(AVector):
 
 
 class HDFGroup(object):
-  def __init__(self, name, range, color):
+  def __init__(self, name, offset, data, color):
     self.name = name
-    self.range = range
+    self.data = data
+    self.range = ranges.from_slice(offset, offset + len(data))
     self.color = color
 
   def __len__(self):
-    return len(self.range)
+    return len(self.data)
 
   def dump(self):
     return dict(name=self.name, range=str(self.range), color=self.color)
+
+  def dump_desc(self):
+    return dict(name=self.name, size=len(self), color=self.color)
 
 
 def guess_color(name, i):
@@ -242,6 +245,7 @@ class HDFStratification(AStratification):
     self._project = project
     self._rowids = None
     self.idtype = self._group._v_attrs.idtype
+    self._groups = None
 
   def idtypes(self):
     return [self.idtype]
@@ -251,19 +255,13 @@ class HDFStratification(AStratification):
     r['idtype'] = self.idtype
     if 'origin' in self._group._v_attrs:
       r['origin'] = self._project + '/' + self._group._v_attrs.origin
-    r['groups'] = [dict(name=gf._v_title, size=len(gf),
-                        color=gf._v_attrs['color'] if 'color' in gf._v_attrs else guess_color(gf._v_title, j))
-                   for j, gf in enumerate(self._sortedgroup())]
-
+    r['groups'] = [g.dump_desc() for g in self.groups()]
     r['ngroups'] = len(r['groups'])
     r['size'] = [sum((g['size'] for g in r['groups']))]
     return r
 
-  def _sortedgroup(self):
-    return sorted(self._group._v_children.itervalues(), key=lambda x: x._v_title)
-
   def _rows(self):
-    return np.concatenate(self._sortedgroup())
+    return np.concatenate([g.data for g in self.groups()])
 
   def rows(self, range=None):
     n = self._rows()
@@ -280,13 +278,16 @@ class HDFStratification(AStratification):
     return n[range.asslice()]
 
   def groups(self):
-    i = 0
-    for j, g in enumerate(self._sortedgroup()):
-      name = g._v_title
-      color = g._v_attrs['color'] if 'color' in g._v_attrs else guess_color(name, j)
-      l = len(g)
-      yield HDFGroup(name, ranges.from_slice(i, i + l), color)
-      i += l
+    if self._groups is None:
+      self._groups = []
+      i = 0
+      for j, g in enumerate(sorted(self._group._v_children.itervalues(), key=lambda x: x._v_title)):
+        name = g._v_title
+        color = g._v_attrs['color'] if 'color' in g._v_attrs else guess_color(name, j)
+        l = len(g)
+        self._groups.append(HDFGroup(name, i, g, color))
+        i += l
+    return self._groups
 
   def __getitem__(self, item):
     group = getattr(self._group, item)
@@ -442,7 +443,7 @@ class HDFFilesProvider(ADataSetProvider):
     self.files = [HDFProject(f, base_dir) for f in glob_recursivly(base_dir, c.glob)]
 
   def __len__(self):
-    return sum((len(f) for f in self.files))
+    return sum((len(f) for f in self))
 
   def __iter__(self):
     return iter((f for f in itertools.chain(*self.files) if f.can_read()))
