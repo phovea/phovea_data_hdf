@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 import os
 import numpy as np
 import tables
@@ -18,7 +18,7 @@ def assign_ids(ids, idtype):
 
 def _resolve_categories(attrs):
   cats = attrs['categories']
-  if isinstance(cats[0], str) or isinstance(cats[0], unicode):  # categories are strings
+  if isinstance(cats[0], str) or isinstance(cats[0], str):  # categories are strings
     converter = tables.misc.enum.Enum(cats)
     # create a numpy function out of it
     converter = np.vectorize(converter, otypes=['S' + str(max((len(c) for c in cats)))])
@@ -31,7 +31,7 @@ def _resolve_categories(attrs):
       names.insert(0, 'UNKN@WN')
       colors.insert(0, '#4c4c4c')
     cats = [dict(name=cat, label=name, color=col) for cat, name, col in
-            itertools.izip(cats, names, colors)]
+            zip(cats, names, colors)]
 
   return cats, converter
 
@@ -233,9 +233,8 @@ def guess_color(name, i):
   colors = dict(male='blue', female='red', deceased='#e41a1b', living='#377eb8')
   if name in colors:
     return colors[name]
-  l = ['#8dd3c7', '#ffffb3', '#bebada', '#fb8072', '#80b1d3', '#fdb462', '#b3de69', '#fccde5', '#d9d9d9', '#bc80bd',
-       '#ccebc5', '#ffed6f']
-  return l[i % len(l)]
+  li = ['#8dd3c7', '#ffffb3', '#bebada', '#fb8072', '#80b1d3', '#fdb462', '#b3de69', '#fccde5', '#d9d9d9', '#bc80bd', '#ccebc5', '#ffed6f']
+  return li[i % len(li)]
 
 
 class HDFStratification(AStratification):
@@ -281,12 +280,12 @@ class HDFStratification(AStratification):
     if self._groups is None:
       self._groups = []
       i = 0
-      for j, g in enumerate(sorted(self._group._v_children.itervalues(), key=lambda x: x._v_title)):
+      for j, g in enumerate(sorted(iter(self._group._v_children.values()), key=lambda x: x._v_title)):
         name = g._v_title
         color = g._v_attrs['color'] if 'color' in g._v_attrs else guess_color(name, j)
-        l = len(g)
+        li = len(g)
         self._groups.append(HDFGroup(name, i, g, color))
-        i += l
+        i += li
     return self._groups
 
   def __getitem__(self, item):

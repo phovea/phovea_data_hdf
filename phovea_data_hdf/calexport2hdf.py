@@ -8,7 +8,7 @@ rename the heterogeneous column csv file: xxx_cols.csv to xxx_desc.csv and edit 
 3. add additional columns for the type: string (extra column the max length), int8, int16,int32, float16, float32, float64, enum (add as extra columns the categories)
 convert it
 """
-from __future__ import print_function
+
 import tables
 import numpy as np
 import glob
@@ -43,21 +43,21 @@ def convert_it(base):
       last = None, None
       with open(name + '_' + idtype + '.json') as fs:
         strats = json.load(fs)
-        for key, value in strats.iteritems():
+        for key, value in strats.items():
 
           s = h5.create_group('/', clean_name(cleaned + '_' + key), origin + '/' + key)
           h5.set_node_attr(s, 'type', 'stratification')
           h5.set_node_attr(s, 'idtype', idtype)
           h5.set_node_attr(s, 'origin', origin)
           last = [], key
-          for gg, indices in value.iteritems():
+          for gg, indices in value.items():
             last[0].extend(indices)
             h5.create_array(s, clean_name(gg), ids[indices], gg)
       return last
 
     with open(name + '_rows.csv', 'r') as cc:
-      l = cc.readline().split(';')
-      rowtype = l[1].strip()
+      li = cc.readline().split(';')
+      rowtype = li[1].strip()
       h5.set_node_attr(group, 'rowtype', rowtype)
 
     rows = np.loadtxt(name + '_rows.csv', dtype=np.string_, delimiter=';', skiprows=1, usecols=(1,))
@@ -152,8 +152,8 @@ def convert_it(base):
       h5.set_node_attr(group, 'type', 'matrix')
 
       with open(name + '_cols.csv', 'r') as cc:
-        l = cc.readline().split(';')
-        coltype = l[1].strip()
+        li = cc.readline().split(';')
+        coltype = li[1].strip()
         h5.set_node_attr(group, 'coltype', coltype)
 
         mtype = [m.strip() for m in cc.readline().split(';')[2:]]
