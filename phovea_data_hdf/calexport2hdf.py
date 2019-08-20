@@ -43,14 +43,14 @@ def convert_it(base):
       last = None, None
       with open(name + '_' + idtype + '.json') as fs:
         strats = json.load(fs)
-        for key, value in strats.items():
+        for key, value in list(strats.items()):
 
           s = h5.create_group('/', clean_name(cleaned + '_' + key), origin + '/' + key)
           h5.set_node_attr(s, 'type', 'stratification')
           h5.set_node_attr(s, 'idtype', idtype)
           h5.set_node_attr(s, 'origin', origin)
           last = [], key
-          for gg, indices in value.items():
+          for gg, indices in list(value.items()):
             last[0].extend(indices)
             h5.create_array(s, clean_name(gg), ids[indices], gg)
       return last
@@ -117,7 +117,7 @@ def convert_it(base):
               column['type'] = 'real'
             else:
               missing = np.iinfo(getattr(np, row[2])).min
-              print(row[2], missing)
+              print((row[2], missing))
 
               def to_int(x):
                 return missing if x == 'NA' or x == '' else int(x)
@@ -161,7 +161,7 @@ def convert_it(base):
       cols = np.loadtxt(name + '_cols.csv', dtype=np.string_, delimiter=';', skiprows=1, usecols=(1,))
       default_col_strat, default_col_strat_name = load_stratification(cols, coltype, name.split('/')[-1])
       print(mtype)
-      print(mtype[0])
+      print((mtype[0]))
 
       if mtype[0] == 'float32':
         print('float32')
@@ -222,7 +222,7 @@ def convert_it(base):
         default_row_strat_name, default_col_strat_name = default_col_strat_name, default_row_strat_name
 
       if default_col_strat and len(default_col_strat) == len(cols):
-        print('apply column stratification %s', default_col_strat_name)
+        print(('apply column stratification %s', default_col_strat_name))
         cols = cols[default_col_strat]
         data = data[:, default_col_strat]
 

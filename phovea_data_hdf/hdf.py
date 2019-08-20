@@ -280,7 +280,7 @@ class HDFStratification(AStratification):
     if self._groups is None:
       self._groups = []
       i = 0
-      for j, g in enumerate(sorted(iter(self._group._v_children.values()), key=lambda x: x._v_title)):
+      for j, g in enumerate(sorted(iter(list(self._group._v_children.values())), key=lambda x: x._v_title)):
         name = g._v_title
         color = g._v_attrs['color'] if 'color' in g._v_attrs else guess_color(name, j)
         li = len(g)
