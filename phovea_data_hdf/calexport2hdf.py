@@ -43,14 +43,14 @@ def convert_it(base):
       last = None, None
       with open(name + '_' + idtype + '.json') as fs:
         strats = json.load(fs)
-        for key, value in list(strats.items()):
+        for key, value in strats.items():
 
           s = h5.create_group('/', clean_name(cleaned + '_' + key), origin + '/' + key)
           h5.set_node_attr(s, 'type', 'stratification')
           h5.set_node_attr(s, 'idtype', idtype)
           h5.set_node_attr(s, 'origin', origin)
           last = [], key
-          for gg, indices in list(value.items()):
+          for gg, indices in value.items():
             last[0].extend(indices)
             h5.create_array(s, clean_name(gg), ids[indices], gg)
       return last
