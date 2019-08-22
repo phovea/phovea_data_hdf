@@ -10,7 +10,6 @@ jobs:
       - checkout
       - run:
           command: |
-            sudo apt-get update
             (!(test -f docker_packages.txt) || (cat docker_packages.txt | xargs sudo apt-get install -y))
       - restore_cache:
           key: deps1-{{ .Branch }}-{{ checksum "requirements.txt" }}-{{ checksum "requirements_dev.txt" }}
