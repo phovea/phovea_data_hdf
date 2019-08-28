@@ -381,19 +381,20 @@ class HDFTable(ATable):
     import pandas as pd
     n = pd.DataFrame.from_records(self._group.table[:])
     # ensure right column order
-    n = n[[c.key for c in self.columns]]
+    n = n[[item.key for item in self.columns]]
 
     # convert categorical enums
-    for c in self.columns:
-      if c.type == 'categorical':
-        n[c.key] = c.convert_category(n[c.key])
+    # rename variable to avoid shadowing
+    for item in self.columns:
+      if item.type == 'categorical':
+        n[item.key] = item.convert_category(n[item.key])
 
     if range is None:
       return n
     return n.iloc[range[0].asslice(no_ellipsis=True)]
 
   def filter(self, query):
-    # perform the query on rows and cols and return a range with just the mathing one
+    # perform the query on rows and cols and return a range with just the matching one
     # np.argwhere
     return ranges.all()
 
@@ -435,11 +436,22 @@ class HDFProject(object):
 
 class HDFFilesProvider(ADataSetProvider):
   def __init__(self):
-    import phovea_server.config
-    c = phovea_server.config.view('phovea_data_hdf')
+
+    # add path to syspath in order to enable import statement
+    import os
+    import sys
+    path = os.path.dirname(os.path.realpath(__file__))
+    # required to import files in python 3.7
+    sys.path.insert(0, os.path.abspath(path + '/phovea_server'))
+
+    import config
+    print(config.get_c())
+    # rename variable to avoid shadowing
+    conf = config.view('phovea_data_hdf')
     from phovea_server.util import glob_recursivly
-    base_dir = phovea_server.config.get('dataDir', 'phovea_server')
-    self.files = [HDFProject(f, base_dir) for f in glob_recursivly(base_dir, c.glob)]
+    base_dir = config.get('dataDir', 'phovea_server')
+    self.files = [HDFProject(f, base_dir) for f in glob_recursivly(base_dir, conf.get('glob'))]
+    print(self.files)
 
   def __len__(self):
     return sum((len(f) for f in self))
