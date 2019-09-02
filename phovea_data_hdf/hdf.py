@@ -446,17 +446,14 @@ class HDFFilesProvider(ADataSetProvider):
     sys.path.insert(0, os.path.abspath(path + '/phovea_server'))
 
     import config
-    print(config._c)
     # force initialization
     if config._c is None:
       config._initialize()
-    print(config._c)
     # rename variable to avoid shadowing
     conf = config.view('phovea_data_hdf')
     from util import glob_recursivly
     base_dir = config.get('dataDir', 'phovea_server')
     self.files = [HDFProject(f, base_dir) for f in glob_recursivly(base_dir, conf.get('glob'))]
-    print(self.files)
 
   def __len__(self):
     return sum((len(f) for f in self))
