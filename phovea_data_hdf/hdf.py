@@ -38,15 +38,15 @@ def _resolve_categories(attrs):
 
 class HDFMatrix(AMatrix):
   def __init__(self, group, project):
-    super(HDFMatrix, self).__init__(group._v_title, project, group._v_attrs.type)
+    super(HDFMatrix, self).__init__(group._v_title, project, group._v_attrs.type.decode('utf-8'))
     self._group = group
     self._project = project
     self.path = self._group._v_pathname
     self._rowids = None
     self._colids = None
     self._range = None
-    self.rowtype = self._group._v_attrs.rowtype
-    self.coltype = self._group._v_attrs.coltype
+    self.rowtype = self._group._v_attrs.rowtype.decode('utf-8')
+    self.coltype = self._group._v_attrs.coltype.decode('utf-8')
     self.value = self._group._v_attrs.value
     self.shape = self._group.data.shape
     if self.value == 'categorical':
@@ -147,12 +147,12 @@ class HDFMatrix(AMatrix):
 
 class HDFVector(AVector):
   def __init__(self, group, project):
-    super(HDFVector, self).__init__(group._v_title, project, group._v_attrs.type)
+    super(HDFVector, self).__init__(group._v_title, project, group._v_attrs.type.decode('utf-8'))
     self._group = group
     self._project = project
     self._rowids = None
     self._range = None
-    self.idtype = self._group._v_attrs.rowtype
+    self.idtype = self._group._v_attrs.rowtype.decode('utf-8')
     self.value = self._group._v_attrs.value
     self.shape = len(self._group.data)
 
@@ -239,11 +239,11 @@ def guess_color(name, i):
 
 class HDFStratification(AStratification):
   def __init__(self, group, project):
-    super(HDFStratification, self).__init__(group._v_title, project, group._v_attrs.type)
+    super(HDFStratification, self).__init__(group._v_title, project, group._v_attrs.type.decode('utf-8'))
     self._group = group
     self._project = project
     self._rowids = None
-    self.idtype = self._group._v_attrs.idtype
+    self.idtype = self._group._v_attrs.idtype.decode('utf-8')
     self._groups = None
 
   def idtypes(self):
@@ -253,7 +253,7 @@ class HDFStratification(AStratification):
     r = super(HDFStratification, self).to_description()
     r['idtype'] = self.idtype
     if 'origin' in self._group._v_attrs:
-      r['origin'] = self._project + '/' + self._group._v_attrs.origin
+      r['origin'] = self._project + '/' + self._group._v_attrs.origin.decode('utf-8')
     r['groups'] = [g.dump_desc() for g in self.groups()]
     r['ngroups'] = len(r['groups'])
     r['size'] = [sum((g['size'] for g in r['groups']))]
@@ -280,7 +280,8 @@ class HDFStratification(AStratification):
     if self._groups is None:
       self._groups = []
       i = 0
-      for j, g in enumerate(sorted(iter(self._group._v_children.values())), key=lambda x: x._v_title):
+      values = iter(self._group._v_children.values())
+      for j, g in enumerate(sorted(values, key=lambda x: x._v_title)):
         name = g._v_title
         color = g._v_attrs['color'] if 'color' in g._v_attrs else guess_color(name, j)
         li = len(g)
@@ -345,13 +346,13 @@ class HDFColumn(AColumn):
 
 class HDFTable(ATable):
   def __init__(self, group, project):
-    super(HDFTable, self).__init__(group._v_title, project, group._v_attrs.type)
+    super(HDFTable, self).__init__(group._v_title, project, group._v_attrs.type.decode('utf-8'))
     self._group = group
     self._project = project
 
     self.columns = [HDFColumn(a, group) for a in group._v_attrs.columns]
     self._rowids = None
-    self.idtype = self._group._v_attrs.rowtype
+    self.idtype = self._group._v_attrs.rowtype.decode('utf-8')
 
   def idtypes(self):
     return [self.idtype]
@@ -411,7 +412,7 @@ class HDFProject(object):
     for group in self._h.walk_groups('/'):
       if 'type' not in group._v_attrs:
         continue
-      t = group._v_attrs.type
+      t = group._v_attrs.type.decode('utf-8')
       if t == 'matrix':
         self.entries.append(HDFMatrix(group, project))
       elif t == 'stratification':
