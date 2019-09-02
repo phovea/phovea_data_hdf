@@ -446,7 +446,7 @@ class HDFFilesProvider(ADataSetProvider):
     sys.path.insert(0, os.path.abspath(path + '/phovea_server'))
 
     import config
-    # force initialization
+    # check initialization
     if config._c is None:
       config._initialize()
     # rename variable to avoid shadowing
