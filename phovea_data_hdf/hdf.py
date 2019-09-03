@@ -159,7 +159,7 @@ class HDFVector(AVector):
   @property
   def range(self):
     if 'range' in self._group._v_attrs:
-      return self._group._v_attrs['range']
+          return self._group._v_attrs['range']
     if self._range is not None:
       return self._range
     d = self._group.data
@@ -437,21 +437,12 @@ class HDFProject(object):
 
 class HDFFilesProvider(ADataSetProvider):
   def __init__(self):
-
-    # add path to syspath in order to enable import statement
-    import os
-    import sys
-    path = os.path.dirname(os.path.realpath(__file__))
-    # required to import files in python 3.7
-    sys.path.insert(0, os.path.abspath(path + '/phovea_server'))
-
-    import config
+    from phovea_server import config
     # check initialization
     if config._c is None:
       config._initialize()
-    # rename variable to avoid shadowing
     conf = config.view('phovea_data_hdf')
-    from util import glob_recursivly
+    from phovea_server.util import glob_recursivly
     base_dir = config.get('dataDir', 'phovea_server')
     self.files = [HDFProject(f, base_dir) for f in glob_recursivly(base_dir, conf.get('glob'))]
 
