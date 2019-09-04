@@ -47,7 +47,7 @@ class HDFMatrix(AMatrix):
     self._range = None
     self.rowtype = self._group._v_attrs.rowtype.decode('utf-8')
     self.coltype = self._group._v_attrs.coltype.decode('utf-8')
-    self.value = self._group._v_attrs.value
+    self.value = self._group._v_attrs.value.decode('utf-8')
     self.shape = self._group.data.shape
     if self.value == 'categorical':
       self.categories, self._converter = _resolve_categories(group._v_attrs)
@@ -153,7 +153,7 @@ class HDFVector(AVector):
     self._rowids = None
     self._range = None
     self.idtype = self._group._v_attrs.rowtype.decode('utf-8')
-    self.value = self._group._v_attrs.value
+    self.value = self._group._v_attrs.value.decode('utf-8')
     self.shape = len(self._group.data)
 
   @property
@@ -174,7 +174,7 @@ class HDFVector(AVector):
     r['idtype'] = self.idtype
     r['value'] = dict(type=self.value, range=self.range)
     if self.value == 'int' and hasattr(self._group._v_attrs, 'missing'):
-      r['value']['missing'] = self._group._v_attrs.missing
+      r['value']['missing'] = self._group._v_attrs.missing.decode('utf-8')
     if 'center' in self._group._v_attrs:
       r['value']['center'] = self._group._v_attrs['center']
     r['size'] = [self.shape]
