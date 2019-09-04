@@ -73,7 +73,7 @@ class HDFMatrix(AMatrix):
     if self.value == 'real' or self.value == 'int':
       v['range'] = self.range
     if self.value == 'int' and hasattr(self._group._v_attrs, 'missing'):
-      v['missing'] = self._group._v_attrs.missing
+      v['missing'] = self._group._v_attrs.missing.decode('utf-8')
     elif self.value == 'categorical':
       v['categories'] = self.categories
 
@@ -84,7 +84,7 @@ class HDFMatrix(AMatrix):
 
   def mask(self, arr):
     if self.value == 'int' and hasattr(self._group._v_attrs, 'missing'):
-      missing = self._group._v_attrs.missing
+      missing = self._group._v_attrs.missing.decode('utf-8')
       import numpy.ma as ma
       return ma.masked_equal(arr, missing)
 
@@ -182,7 +182,7 @@ class HDFVector(AVector):
 
   def mask(self, arr):
     if self.value == 'int' and hasattr(self._group._v_attrs, 'missing'):
-      missing = self._group._v_attrs.missing
+      missing = self._group._v_attrs.missing.decode('utf-8')
       import numpy.ma as ma
       return ma.masked_equal(arr, missing)
     return arr
