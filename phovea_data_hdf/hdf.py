@@ -159,7 +159,7 @@ class HDFVector(AVector):
   @property
   def range(self):
     if 'range' in self._group._v_attrs:
-          return self._group._v_attrs['range']
+      return self._group._v_attrs['range']
     if self._range is not None:
       return self._range
     d = self._group.data
