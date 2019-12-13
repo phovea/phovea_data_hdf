@@ -27,6 +27,12 @@
     "unknown": {
       "requirements": [],
       "dockerPackages": []
+    },
+    "promptValues": {
+      "authorName": "The Caleydo Team",
+      "authorEmail": "contact@caleydo.org",
+      "authorUrl": "https://caleydo.org",
+      "githubAccount": "phovea"
     }
   }
 }
