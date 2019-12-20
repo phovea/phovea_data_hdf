@@ -56,8 +56,8 @@ def convert_it(base):
       return last
 
     with open(name + '_rows.csv', 'r') as cc:
-      l = cc.readline().split(';')
-      rowtype = l[1].strip()
+      line = cc.readline().split(';')
+      rowtype = line[1].strip()
       h5.set_node_attr(group, 'rowtype', rowtype)
 
     rows = np.loadtxt(name + '_rows.csv', dtype=np.string_, delimiter=';', skiprows=1, usecols=(1,))
@@ -152,8 +152,8 @@ def convert_it(base):
       h5.set_node_attr(group, 'type', 'matrix')
 
       with open(name + '_cols.csv', 'r') as cc:
-        l = cc.readline().split(';')
-        coltype = l[1].strip()
+        line = cc.readline().split(';')
+        coltype = line[1].strip()
         h5.set_node_attr(group, 'coltype', coltype)
 
         mtype = [m.strip() for m in cc.readline().split(';')[2:]]

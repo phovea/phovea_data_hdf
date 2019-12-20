@@ -233,9 +233,8 @@ def guess_color(name, i):
   colors = dict(male='blue', female='red', deceased='#e41a1b', living='#377eb8')
   if name in colors:
     return colors[name]
-  l = ['#8dd3c7', '#ffffb3', '#bebada', '#fb8072', '#80b1d3', '#fdb462', '#b3de69', '#fccde5', '#d9d9d9', '#bc80bd',
-       '#ccebc5', '#ffed6f']
-  return l[i % len(l)]
+  colors = ['#8dd3c7', '#ffffb3', '#bebada', '#fb8072', '#80b1d3', '#fdb462', '#b3de69', '#fccde5', '#d9d9d9', '#bc80bd', '#ccebc5', '#ffed6f']
+  return colors[i % len(colors)]
 
 
 class HDFStratification(AStratification):
@@ -284,9 +283,9 @@ class HDFStratification(AStratification):
       for j, g in enumerate(sorted(self._group._v_children.itervalues(), key=lambda x: x._v_title)):
         name = g._v_title
         color = g._v_attrs['color'] if 'color' in g._v_attrs else guess_color(name, j)
-        l = len(g)
+        length = len(g)
         self._groups.append(HDFGroup(name, i, g, color))
-        i += l
+        i += length
     return self._groups
 
   def __getitem__(self, item):
