@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 import os
 import numpy as np
 import tables
@@ -18,7 +18,7 @@ def assign_ids(ids, idtype):
 
 def _resolve_categories(attrs):
   cats = attrs['categories']
-  if isinstance(cats[0], str) or isinstance(cats[0], unicode):  # categories are strings
+  if isinstance(cats[0], str) or isinstance(cats[0], str):  # categories are strings
     converter = tables.misc.enum.Enum(cats)
     # create a numpy function out of it
     converter = np.vectorize(converter, otypes=['S' + str(max((len(c) for c in cats)))])
@@ -31,23 +31,23 @@ def _resolve_categories(attrs):
       names.insert(0, 'UNKN@WN')
       colors.insert(0, '#4c4c4c')
     cats = [dict(name=cat, label=name, color=col) for cat, name, col in
-            itertools.izip(cats, names, colors)]
+            zip(cats, names, colors)]
 
   return cats, converter
 
 
 class HDFMatrix(AMatrix):
   def __init__(self, group, project):
-    super(HDFMatrix, self).__init__(group._v_title, project, group._v_attrs.type)
+    super(HDFMatrix, self).__init__(group._v_title, project, group._v_attrs.type.decode('utf-8'))
     self._group = group
     self._project = project
     self.path = self._group._v_pathname
     self._rowids = None
     self._colids = None
     self._range = None
-    self.rowtype = self._group._v_attrs.rowtype
-    self.coltype = self._group._v_attrs.coltype
-    self.value = self._group._v_attrs.value
+    self.rowtype = self._group._v_attrs.rowtype.decode('utf-8')
+    self.coltype = self._group._v_attrs.coltype.decode('utf-8')
+    self.value = self._group._v_attrs.value.decode('utf-8')
     self.shape = self._group.data.shape
     if self.value == 'categorical':
       self.categories, self._converter = _resolve_categories(group._v_attrs)
@@ -73,7 +73,7 @@ class HDFMatrix(AMatrix):
     if self.value == 'real' or self.value == 'int':
       v['range'] = self.range
     if self.value == 'int' and hasattr(self._group._v_attrs, 'missing'):
-      v['missing'] = self._group._v_attrs.missing
+      v['missing'] = self._group._v_attrs.missing.decode('utf-8')
     elif self.value == 'categorical':
       v['categories'] = self.categories
 
@@ -84,7 +84,7 @@ class HDFMatrix(AMatrix):
 
   def mask(self, arr):
     if self.value == 'int' and hasattr(self._group._v_attrs, 'missing'):
-      missing = self._group._v_attrs.missing
+      missing = self._group._v_attrs.missing.decode('utf-8')
       import numpy.ma as ma
       return ma.masked_equal(arr, missing)
 
@@ -147,13 +147,13 @@ class HDFMatrix(AMatrix):
 
 class HDFVector(AVector):
   def __init__(self, group, project):
-    super(HDFVector, self).__init__(group._v_title, project, group._v_attrs.type)
+    super(HDFVector, self).__init__(group._v_title, project, group._v_attrs.type.decode('utf-8'))
     self._group = group
     self._project = project
     self._rowids = None
     self._range = None
-    self.idtype = self._group._v_attrs.rowtype
-    self.value = self._group._v_attrs.value
+    self.idtype = self._group._v_attrs.rowtype.decode('utf-8')
+    self.value = self._group._v_attrs.value.decode('utf-8')
     self.shape = len(self._group.data)
 
   @property
@@ -174,7 +174,7 @@ class HDFVector(AVector):
     r['idtype'] = self.idtype
     r['value'] = dict(type=self.value, range=self.range)
     if self.value == 'int' and hasattr(self._group._v_attrs, 'missing'):
-      r['value']['missing'] = self._group._v_attrs.missing
+      r['value']['missing'] = self._group._v_attrs.missing.decode('utf-8')
     if 'center' in self._group._v_attrs:
       r['value']['center'] = self._group._v_attrs['center']
     r['size'] = [self.shape]
@@ -182,7 +182,7 @@ class HDFVector(AVector):
 
   def mask(self, arr):
     if self.value == 'int' and hasattr(self._group._v_attrs, 'missing'):
-      missing = self._group._v_attrs.missing
+      missing = self._group._v_attrs.missing.decode('utf-8')
       import numpy.ma as ma
       return ma.masked_equal(arr, missing)
     return arr
@@ -239,11 +239,11 @@ def guess_color(name, i):
 
 class HDFStratification(AStratification):
   def __init__(self, group, project):
-    super(HDFStratification, self).__init__(group._v_title, project, group._v_attrs.type)
+    super(HDFStratification, self).__init__(group._v_title, project, group._v_attrs.type.decode('utf-8'))
     self._group = group
     self._project = project
     self._rowids = None
-    self.idtype = self._group._v_attrs.idtype
+    self.idtype = self._group._v_attrs.idtype.decode('utf-8')
     self._groups = None
 
   def idtypes(self):
@@ -253,7 +253,7 @@ class HDFStratification(AStratification):
     r = super(HDFStratification, self).to_description()
     r['idtype'] = self.idtype
     if 'origin' in self._group._v_attrs:
-      r['origin'] = self._project + '/' + self._group._v_attrs.origin
+      r['origin'] = self._project + '/' + self._group._v_attrs.origin.decode('utf-8')
     r['groups'] = [g.dump_desc() for g in self.groups()]
     r['ngroups'] = len(r['groups'])
     r['size'] = [sum((g['size'] for g in r['groups']))]
@@ -280,7 +280,8 @@ class HDFStratification(AStratification):
     if self._groups is None:
       self._groups = []
       i = 0
-      for j, g in enumerate(sorted(self._group._v_children.itervalues(), key=lambda x: x._v_title)):
+      values = iter(self._group._v_children.values())
+      for j, g in enumerate(sorted(values, key=lambda x: x._v_title)):
         name = g._v_title
         color = g._v_attrs['color'] if 'color' in g._v_attrs else guess_color(name, j)
         length = len(g)
@@ -345,13 +346,13 @@ class HDFColumn(AColumn):
 
 class HDFTable(ATable):
   def __init__(self, group, project):
-    super(HDFTable, self).__init__(group._v_title, project, group._v_attrs.type)
+    super(HDFTable, self).__init__(group._v_title, project, group._v_attrs.type.decode('utf-8'))
     self._group = group
     self._project = project
 
     self.columns = [HDFColumn(a, group) for a in group._v_attrs.columns]
     self._rowids = None
-    self.idtype = self._group._v_attrs.rowtype
+    self.idtype = self._group._v_attrs.rowtype.decode('utf-8')
 
   def idtypes(self):
     return [self.idtype]
@@ -381,19 +382,20 @@ class HDFTable(ATable):
     import pandas as pd
     n = pd.DataFrame.from_records(self._group.table[:])
     # ensure right column order
-    n = n[[c.key for c in self.columns]]
+    n = n[[item.key for item in self.columns]]
 
     # convert categorical enums
-    for c in self.columns:
-      if c.type == 'categorical':
-        n[c.key] = c.convert_category(n[c.key])
+    # rename variable to avoid shadowing
+    for item in self.columns:
+      if item.type == 'categorical':
+        n[item.key] = item.convert_category(n[item.key])
 
     if range is None:
       return n
     return n.iloc[range[0].asslice(no_ellipsis=True)]
 
   def filter(self, query):
-    # perform the query on rows and cols and return a range with just the mathing one
+    # perform the query on rows and cols and return a range with just the matching one
     # np.argwhere
     return ranges.all()
 
@@ -410,7 +412,7 @@ class HDFProject(object):
     for group in self._h.walk_groups('/'):
       if 'type' not in group._v_attrs:
         continue
-      t = group._v_attrs.type
+      t = group._v_attrs.type.decode('utf-8')
       if t == 'matrix':
         self.entries.append(HDFMatrix(group, project))
       elif t == 'stratification':
@@ -435,11 +437,14 @@ class HDFProject(object):
 
 class HDFFilesProvider(ADataSetProvider):
   def __init__(self):
-    import phovea_server.config
-    c = phovea_server.config.view('phovea_data_hdf')
+    from phovea_server import config
+    # check initialization
+    if config._c is None:
+      config._initialize()
+    conf = config.view('phovea_data_hdf')
     from phovea_server.util import glob_recursivly
-    base_dir = phovea_server.config.get('dataDir', 'phovea_server')
-    self.files = [HDFProject(f, base_dir) for f in glob_recursivly(base_dir, c.glob)]
+    base_dir = config.get('dataDir', 'phovea_server')
+    self.files = [HDFProject(f, base_dir) for f in glob_recursivly(base_dir, conf.get('glob'))]
 
   def __len__(self):
     return sum((len(f) for f in self))
