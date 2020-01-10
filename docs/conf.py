@@ -21,8 +21,6 @@ from codecs import open
 sys.path.insert(0, os.path.abspath('..'))
 
 with open('../package.json', encoding='utf-8') as json_data:
-  import json
-
   pkg = json.load(json_data)
 
 # -- General configuration ------------------------------------------------
@@ -44,9 +42,7 @@ templates_path = ['_templates']
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
 #
-source_parsers = {
-  '.md': 'recommonmark.parser.CommonMarkParser',
-}
+source_parsers = {'.md': 'recommonmark.parser.CommonMarkParser'}
 source_suffix = ['.rst', '.md']
 
 # The master toctree document.

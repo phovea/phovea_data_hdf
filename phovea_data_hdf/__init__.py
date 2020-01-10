@@ -14,6 +14,8 @@ def phovea(registry):
   registry.append('dataset-provider', 'dataset-hdf', 'phovea_data_hdf.hdf', {})
 
   registry.append('json-encoder', 'dataset-hdf', 'phovea_data_hdf.json_encoder', {})
+
+  registry.append('json-encoder', 'bytes-to-string-encoder', 'phovea_data_hdf.bytes_to_string_encoder', {})
   # generator-phovea:end
   pass
 
