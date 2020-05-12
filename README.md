@@ -1,5 +1,7 @@
-phovea_data_hdf [![Phovea][phovea-image]][phovea-url] [![NPM version][npm-image]][npm-url] [![Build Status][travis-image]][travis-url] [![Dependency Status][daviddm-image]][daviddm-url]
+phovea_data_hdf  
 =====================
+[![Phovea][phovea-image]][phovea-url]  [![Build Status][circleci-image]][circleci-url]
+
 
 Data provider plugin for loading data stored as [Hierarchical Data Format (HDF)](http://www.hdfgroup.org/).
 
