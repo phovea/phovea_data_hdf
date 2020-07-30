@@ -1,5 +1,7 @@
-phovea_data_hdf [![Phovea][phovea-image]][phovea-url] [![NPM version][npm-image]][npm-url] [![Build Status][travis-image]][travis-url] [![Dependency Status][daviddm-image]][daviddm-url]
+phovea_data_hdf  
 =====================
+[![Phovea][phovea-image]][phovea-url]  [![Build Status][circleci-image]][circleci-url]
+
 
 Data provider plugin for loading data stored as [Hierarchical Data Format (HDF)](http://www.hdfgroup.org/).
 
@@ -36,9 +38,5 @@ This repository is part of **[Phovea](http://phovea.caleydo.org/)**, a platform 
 
 [phovea-image]: https://img.shields.io/badge/Phovea-Server%20Plugin-10ACDF.svg
 [phovea-url]: https://phovea.caleydo.org
-[npm-image]: https://badge.fury.io/js/phovea_data_hdf.svg
-[npm-url]: https://npmjs.org/package/phovea_data_hdf
-[travis-image]: https://travis-ci.org/phovea/phovea_data_hdf.svg?branch=master
-[travis-url]: https://travis-ci.org/phovea/phovea_data_hdf
-[daviddm-image]: https://david-dm.org/phovea/phovea_data_hdf/status.svg
-[daviddm-url]: https://david-dm.org/phovea/phovea_data_hdf
+[circleci-image]: https://circleci.com/gh/phovea/phovea_data_hdf.svg?style=shield
+[circleci-url]: https://circleci.com/gh/phovea/phovea_data_hdf
