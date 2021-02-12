@@ -1,2 +1,2 @@
-phovea_server>=6.0.0,<7.0.0
 tables==3.6.1
+phovea_server>=7.0.0,<8.0.0
