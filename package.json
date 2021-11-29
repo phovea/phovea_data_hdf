@@ -1,7 +1,7 @@
 {
   "name": "phovea_data_hdf",
-  "description": "Data provider plugin for loading data stored in the hierarchical data format (HDF).",
-  "version": "7.1.1-SNAPSHOT",
+  "description": "DEPRECATED: Data provider plugin for loading data stored in the hierarchical data format (HDF).",
+  "version": "8.0.0",
   "author": {
     "name": "The Caleydo Team",
     "email": "contact@caleydo.org",
