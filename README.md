@@ -1,9 +1,12 @@
-phovea_data_hdf  
+DEPRECATED: phovea_data_hdf  
 =====================
 [![Phovea][phovea-image]][phovea-url]  [![Build Status][circleci-image]][circleci-url]
 
 
 Data provider plugin for loading data stored as [Hierarchical Data Format (HDF)](http://www.hdfgroup.org/).
+
+### DEPRECATION Information
+Please note that this project has been archived and is no longer being maintained. There is an active development under https://github.com/datavisyn/tdp_core and we will also contribute our future changes to it.
 
 Installation
 ------------
